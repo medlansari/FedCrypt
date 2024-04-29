@@ -10,7 +10,7 @@ from src.setting import DEVICE, LEARNING_RATE_CLIENT, MAX_EPOCH_CLIENT
 
 class Client:
     def __init__(self, model, weights, train_set):
-        self.model = model
+        self.model = ConvNet(False)
         self.model.load_state_dict(weights)
         self.model.to(DEVICE)
         self.train_set = train_set

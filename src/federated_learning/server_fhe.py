@@ -1,8 +1,20 @@
 import copy
+import random
+from time import time
+
+import numpy as np
+import torch
+from tqdm import tqdm
+from torch import nn, optim
 
 from src.data.data_splitter import data_splitter
+from src.data.trigger_wafflepattern import WafflePattern
+from src.federated_learning.aggregation import fedavg
 from src.federated_learning.client import Client
-
+from src.metric import accuracy, watermark_detection_rate, one_hot_encoding
+from src.model.convnet import Detector, ConvNet
+from src.setting import DEVICE, NUM_WORKERS, PRCT_TO_SELECT, MAX_EPOCH_CLIENT
+from src.model.freeze import bn_layers_requires_grad, embedding_mode_requies_grad
 
 class Server_FHE():
 
@@ -12,14 +24,14 @@ class Server_FHE():
         self.nb_clients = nb_clients
         self.poly_client = False
         self.poly_server = True
-        self.model = model
+        self.model = ConvNet(True)
         self.model.to(DEVICE)
         self.train_subsets, self.subset_size, self.test_set = data_splitter(self.dataset,
                                                                             self.nb_clients
                                                                             )
         self.detector = Detector()
         self.detector.to(DEVICE)
-        self.model_test = model
+        self.model_test = ConvNet(False)
         self.model_test.to(DEVICE)
         self.trigger_set = torch.utils.data.DataLoader(
             WafflePattern(RGB=True, features=True),
@@ -33,10 +45,9 @@ class Server_FHE():
 
         print("Dataset :", dataset)
         print("Number of clients :", self.nb_clients)
-        print("Distribution :", self.distrib)
 
     def train(self, nb_rounds, lr_client, lr_pretrain, lr_retrain):
-        print("#" * 60 + "\tFHE\t" + "#" * 60)
+        print("#" * 60 + " Dynamic Watermarking for Encrypted Model " + "#" * 60)
 
         acc_test_list = []
         acc_watermark_black_list = []
@@ -48,7 +59,7 @@ class Server_FHE():
         clients = []
 
         for c in range(self.nb_clients):
-            client = Client(self.model.state_dict(), self.train_subsets[c], self.poly_client)
+            client = Client("à changer", self.model.state_dict(), self.train_subsets[c])
 
             clients.append(client)
 
@@ -69,19 +80,19 @@ class Server_FHE():
 
                 loop.set_description(f"Round [{r}/{nb_rounds}]")
 
-            self.model = fedavg(np.array(clients), self.subset_size, self.model, self.test_set, selected_clients)
+            fedavg(np.array(clients), self.model, self.subset_size, selected_clients)
 
             self.model_test.load_state_dict(self.model.state_dict())
 
             time_before = time()
 
-            acc_watermark_black = self.retrain(lr_retrain, max_round)
+            acc_watermark_black = self.retrain(lr_retrain, self.max_round)
 
             time_after = time() - time_before
 
             print("Time for watermark embedding :", round(time_after, 2))
 
-            acc_test, loss_test = test(self.model_test, self.test_set)
+            acc_test, loss_test = accuracy(self.model_test, self.test_set)
 
             acc_test_list.append(acc_test)
 
@@ -114,21 +125,8 @@ class Server_FHE():
             + ".pth",
         )
 
-        torch.save(self.secret_key, "./outputs/secret_key_" + str(nb_rounds)
-                   + "_"
-                   + str(MAX_EPOCH_CLIENT)
-                   + "_FHE"
-                   + "_" + self.id
-                   + ".pth", )
 
-        torch.save(self.message, "./outputs/message_" + str(nb_rounds)
-                   + "_"
-                   + str(MAX_EPOCH_CLIENT)
-                   + "_FHE"
-                   + "_" + self.id
-                   + ".pth", )
-
-    def train(self, nb_rounds, lr_client, lr_pretrain, lr_retrain, params):
+    def train_overwriting(self, nb_rounds, lr_client, lr_pretrain, lr_retrain, params):
         print("#" * 60 + "\tFHE\t" + "#" * 60)
 
         lr = lr_retrain
@@ -165,7 +163,7 @@ class Server_FHE():
 
                 loop.set_description(f"Round [{r}/{nb_rounds}]")
 
-            self.model = fedavg(np.array(clients), self.subset_size, self.model, self.test_set, selected_clients)
+            self.model = fedavg(np.array(clients), self.subset_size, self.model, selected_clients)
 
             self.model_test.load_state_dict(self.model.state_dict())
 
@@ -246,24 +244,21 @@ class Server_FHE():
 
 
     def pretrain(self, lr_pretrain):
-        self.bn_layers_requires_grad(False)
+        bn_layers_requires_grad(self.model, False)
 
-        self.requiere_grad_except_fc3(False)
+        embedding_mode_requies_grad(self.model, False)
 
-        optimizer = optim.SGD(self.model.fc1.parameters(), lr=lr_pretrain)  #, weight_decay=1e-4)
+        optimizer = optim.SGD(self.model.fc1.parameters(), lr=lr_pretrain)
 
         optimizer_detector = optim.SGD(self.detector.parameters(), lr=1e-1)
 
         criterion = nn.MSELoss()
 
-        acc_watermark_black, _ = test_MSE(self.model, self.detector, self.triggerset)
-
-        acc_watermark_white = self.wb_verify()
+        acc_watermark_black, _ = watermark_detection_rate(self.model, self.detector, self.trigger_set)
 
         print("Black-Box WDR:", acc_watermark_black)
-        print("White-box WDR:", acc_watermark_white)
 
-        print("\n" + "#" * 20 + "\tPretrain Waffle\t" + "#" * 20 + "\n")
+        print("\n" + "#" * 20 + " Watermark Pre-Embedding " + "#" * 20 + "\n")
 
         epoch = 0
 
@@ -273,7 +268,7 @@ class Server_FHE():
 
             accumulate_loss = 0
 
-            for inputs, outputs in self.triggerset:
+            for inputs, outputs in self.trigger_set:
                 optimizer.zero_grad(set_to_none=True)
                 optimizer_detector.zero_grad(set_to_none=True)
 
@@ -301,30 +296,28 @@ class Server_FHE():
 
                 accumulate_loss += loss.item()
 
-            acc_watermark_black, _ = test_MSE(self.model, self.detector, self.triggerset)
-            acc_watermark_white = self.wb_verify()
+            acc_watermark_black, _ = watermark_detection_rate(self.model, self.detector, self.trigger_set)
 
-            print(acc_watermark_black, accumulate_loss)
+            print(f'\rBlack-Box WDR: {acc_watermark_black}, Loss: {accumulate_loss}', end='', flush=True)
 
             epoch += 1
 
         print("Black-Box WDR:", acc_watermark_black)
-        print("White-box WDR:", acc_watermark_white)
 
         print("\n" + 60 * "#" + "\n")
 
-        self.requiere_grad_except_fc3(True)
+        bn_layers_requires_grad(self.model, True)
 
-        self.bn_layers_requires_grad(True)
+        embedding_mode_requies_grad(self.model, True)
 
-        return acc_watermark_black, acc_watermark_white
+        return acc_watermark_black
 
     def retrain(self, lr_retrain, max_round):
-        self.bn_layers_requires_grad(False)
+        bn_layers_requires_grad(self.model, False)
 
-        self.requiere_grad_except_fc3(False)
+        embedding_mode_requies_grad(self.model, False)
 
-        print("\n" + "#" * 20 + "\tRetrain Waffle\t" + "#" * 20 + "\n")
+        print("\n" + "#" * 20 + " Watermark Re-Embedding " + "#" * 20 + "\n")
 
         optimizer = optim.SGD(self.model.fc1.parameters(), lr=lr_retrain)
 
@@ -332,12 +325,9 @@ class Server_FHE():
 
         criterion = nn.MSELoss()
 
-        acc_watermark_black_before, loss_bb = test_MSE(self.model, self.detector, self.triggerset)
-
-        acc_watermark_white_before = self.wb_verify()
+        acc_watermark_black_before, loss_bb = watermark_detection_rate(self.model, self.detector, self.trigger_set)
 
         print("Black-Box WDR:", acc_watermark_black_before, loss_bb)
-        print("White-box WDR:", acc_watermark_white_before)
 
         loop = tqdm(list(range(max_round)))
 
@@ -345,7 +335,7 @@ class Server_FHE():
 
             accumulate_loss = 0
 
-            for inputs, outputs in self.triggerset:
+            for inputs, outputs in self.trigger_set:
                 optimizer.zero_grad(set_to_none=True)
                 optimizer_detector.zero_grad(set_to_none=True)
 
@@ -373,24 +363,21 @@ class Server_FHE():
 
                 accumulate_loss += loss.item()
 
-            acc_watermark_black, loss_watermark = test_MSE(self.model, self.detector, self.triggerset)
-
-            acc_watermark_white = self.wb_verify()
+            acc_watermark_black, loss_watermark = watermark_detection_rate(self.model, self.detector, self.trigger_set)
 
             loop.set_description(f"Epoch [{epoch}/{max_round}]")
 
             loop.set_postfix(
                 {
                     "Black-Box WDR :": acc_watermark_black,
-                    "White-Box WDR :": acc_watermark_white,
                     "Watermarking Loss ": loss_watermark,
                 }
             )
 
         print("\n" + 60 * "#" + "\n")
 
-        self.requiere_grad_except_fc3(True)
+        bn_layers_requires_grad(self.model, True)
 
-        self.bn_layers_requires_grad(True)
+        embedding_mode_requies_grad(self.model, True)
 
-        return acc_watermark_black_before, acc_watermark_white_before
+        return acc_watermark_black_before
