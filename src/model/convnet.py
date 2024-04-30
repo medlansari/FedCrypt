@@ -26,22 +26,17 @@ class ConvNet(nn.Module):
 
     def forward(self, x, extract_features=False):
         z = self.bn1(self.conv1(x))
-
         z = self.pool(self.activation(z))
 
         z = self.bn2(self.conv2(z))
-
         z = self.pool(self.activation(z))
 
         z = torch.flatten(z, 1)
 
         z = self.activation(self.fc1(z))
-
         if extract_features:
             return z
-
         z = self.activation(self.fc2(z))
-
         y = self.fc3(z)
 
         return y

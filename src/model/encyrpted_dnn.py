@@ -2,6 +2,8 @@ import torch
 import tenseal as ts
 from torch import nn
 
+from src.model.activation import identity, relu_poly
+
 
 class DNN(torch.nn.Module):
 
@@ -19,7 +21,7 @@ class DNN(torch.nn.Module):
     def forward(self, x, features):
         x = x.view(x.size(0), -1)
         if features:
-            return ReLU_poly(self.fc1(x))
+            return relu_poly(self.fc1(x))
         z = self.activation(self.fc1(x))
         out = self.fc2(z)
         return out
@@ -29,7 +31,7 @@ class Detector(nn.Module):
         super().__init__()
         self.fc1 = nn.Linear(32, 10)
 
-        self.activation = Identity
+        self.activation = identity
 
     def forward(self, x):
         x = self.activation(self.fc1(x))

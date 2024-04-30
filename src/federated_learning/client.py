@@ -9,7 +9,20 @@ from src.setting import DEVICE, LEARNING_RATE_CLIENT, MAX_EPOCH_CLIENT
 
 
 class Client:
-    def __init__(self, model, weights, train_set):
+    """
+    The Client class represents a client in a federated learning system. Each client has its own model and training set.
+
+    Attributes:
+        model TODO
+        train_set (DataLoader): The training set used by the client.
+
+    Methods:
+        train(lr=LEARNING_RATE_CLIENT, max_epoch=MAX_EPOCH_CLIENT, test_loader=None, trigger_loader=None, detector=None):
+            Trains the client's model using the specified learning rate and maximum number of epochs.
+            Optionally, a test loader, trigger loader, and detector can be provided for testing and watermark detection.
+    """
+
+    def __init__(self, model: str, weights: dict, train_set: torch.utils.data.DataLoader):
         self.model = ConvNet(False)
         self.model.load_state_dict(weights)
         self.model.to(DEVICE)
@@ -17,12 +30,12 @@ class Client:
 
     def train(
             self,
-            lr=LEARNING_RATE_CLIENT,
-            max_epoch=MAX_EPOCH_CLIENT,
-            test_loader=None,
-            trigger_loader=None,
-            detector=None
-    ):
+            lr: float = LEARNING_RATE_CLIENT,
+            max_epoch: int = MAX_EPOCH_CLIENT,
+            test_loader: torch.utils.data.DataLoader = None,
+            trigger_loader: torch.utils.data.DataLoader = None,
+            detector: nn.Module = None
+    ) -> tuple[list[float], list[float]]:
 
         optimizer = optim.SGD(self.model.parameters(), lr=lr)
 

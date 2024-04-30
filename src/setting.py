@@ -10,7 +10,7 @@ LEARNING_RATE_CLIENT = 1e-2  # Learning rate for the client
 BATCH_SIZE_CLIENT = 32  # Batch size for the client
 BATCH_SIZE_TRIGGER = 2  # Batch size for the trigger
 BATCH_SIZE_SERVER = 20  # Batch size for the server
-MAX_ROUNDS = 80  # Number of rounds
+MAX_ROUNDS = 100  # Number of rounds
 TYPE = torch.float32  # Type of the tensor
 
 TRANSFORM_TRAIN = transforms.Compose(

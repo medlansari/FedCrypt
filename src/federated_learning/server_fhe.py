@@ -15,10 +15,34 @@ from src.metric import accuracy, watermark_detection_rate, one_hot_encoding
 from src.model.convnet import Detector, ConvNet
 from src.setting import DEVICE, NUM_WORKERS, PRCT_TO_SELECT, MAX_EPOCH_CLIENT
 from src.model.freeze import bn_layers_requires_grad, embedding_mode_requies_grad
+from src.plot import plot_FHE
 
 class Server_FHE():
+    """
+    The Server_FHE class represents a server in a federated learning system. The server manages the training process
+    across multiple clients and embed the watermark in the encrypted global model.
 
-    def __init__(self, model, dataset, nb_clients, id):
+    Attributes:
+        model TODO
+        dataset (str): The dataset used for training.
+        nb_clients (int): The number of clients in the federated learning system.
+        id (str): The identifier for the server.
+
+    Methods:
+        train(nb_rounds: int, lr_client: float, lr_pretrain: float, lr_retrain: float):
+            Trains the model across multiple clients for a specified number of rounds. The learning rates for the
+            clients, pretraining, and retraining can be specified.
+
+        train_overwriting(nb_rounds: int, lr_client: float, lr_pretrain: float, lr_retrain: float, params: Tuple):
+            TODO
+
+        pretrain(lr_pretrain: float):
+            TODO
+
+        retrain(lr_retrain: float, max_round: int):
+            TODO
+    """
+    def __init__(self, model : str, dataset : str, nb_clients : int, id : str):
 
         self.dataset = dataset
         self.nb_clients = nb_clients
@@ -46,7 +70,7 @@ class Server_FHE():
         print("Dataset :", dataset)
         print("Number of clients :", self.nb_clients)
 
-    def train(self, nb_rounds, lr_client, lr_pretrain, lr_retrain):
+    def train(self, nb_rounds : int, lr_client : float, lr_pretrain : float, lr_retrain : float) -> None:
         print("#" * 60 + " Dynamic Watermarking for Encrypted Model " + "#" * 60)
 
         acc_test_list = []
@@ -102,6 +126,8 @@ class Server_FHE():
             print("Loss on the test set :", loss_test)
 
             lr_retrain = lr_retrain * 0.99
+
+            plot_FHE(acc_test_list, acc_watermark_black_list, self.id)
 
         torch.save(
             self.model.state_dict(),
@@ -243,7 +269,7 @@ class Server_FHE():
                    + ".pth", )
 
 
-    def pretrain(self, lr_pretrain):
+    def pretrain(self, lr_pretrain : float) -> float:
         bn_layers_requires_grad(self.model, False)
 
         embedding_mode_requies_grad(self.model, False)
@@ -298,11 +324,9 @@ class Server_FHE():
 
             acc_watermark_black, _ = watermark_detection_rate(self.model, self.detector, self.trigger_set)
 
-            print(f'\rBlack-Box WDR: {acc_watermark_black}, Loss: {accumulate_loss}', end='', flush=True)
+            print(f'\rBlack-Box WDR: {acc_watermark_black}, Loss: {round(accumulate_loss,3)}', end='', flush=True)
 
             epoch += 1
-
-        print("Black-Box WDR:", acc_watermark_black)
 
         print("\n" + 60 * "#" + "\n")
 
@@ -312,7 +336,7 @@ class Server_FHE():
 
         return acc_watermark_black
 
-    def retrain(self, lr_retrain, max_round):
+    def retrain(self, lr_retrain : float, max_round : int) -> float:
         bn_layers_requires_grad(self.model, False)
 
         embedding_mode_requies_grad(self.model, False)

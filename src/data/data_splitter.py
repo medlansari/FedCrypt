@@ -81,13 +81,13 @@ def data_splitter(dataset: str, nb_clients: int) -> tuple[
 
         train_set.data = train_set.data.reshape(-1, 784)
 
-        trainset.targets = torch.where(train_set.targets == train_set.targets[0].item(), 0, 1)
+        train_set.targets = torch.where(train_set.targets == train_set.targets[0].item(), 0, 1)
 
         test_set = torchvision.datasets.MNIST(
             root="~/data/", train=False, download=True, transform=TRANSFORM_TEST_MNIST2
         )
 
-        indices = torch.concat([torch.where(testset.targets == 3)[0], torch.where(test_set.targets == 8)[0]], dim=0)
+        indices = torch.concat([torch.where(test_set.targets == 3)[0], torch.where(test_set.targets == 8)[0]], dim=0)
 
         test_set.data, test_set.targets = test_set.data[indices], test_set.targets[indices]
 
