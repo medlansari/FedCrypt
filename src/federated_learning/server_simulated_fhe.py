@@ -17,7 +17,8 @@ from src.setting import DEVICE, NUM_WORKERS, PRCT_TO_SELECT, MAX_EPOCH_CLIENT
 from src.model.freeze import bn_layers_requires_grad, embedding_mode_requies_grad
 from src.plot import plot_FHE
 
-class Server_FHE():
+
+class Server_Simulated_FHE():
     """
     The Server_FHE class represents a server in a federated learning system. The server manages the training process
     across multiple clients and embed the watermark in the encrypted global model.
@@ -42,7 +43,8 @@ class Server_FHE():
         retrain(lr_retrain: float, max_round: int):
             TODO
     """
-    def __init__(self, model : str, dataset : str, nb_clients : int, id : str):
+
+    def __init__(self, model: str, dataset: str, nb_clients: int, id: str):
 
         self.dataset = dataset
         self.nb_clients = nb_clients
@@ -70,7 +72,7 @@ class Server_FHE():
         print("Dataset :", dataset)
         print("Number of clients :", self.nb_clients)
 
-    def train(self, nb_rounds : int, lr_client : float, lr_pretrain : float, lr_retrain : float) -> None:
+    def train(self, nb_rounds: int, lr_client: float, lr_pretrain: float, lr_retrain: float) -> None:
         print("#" * 60 + " Dynamic Watermarking for Encrypted Model " + "#" * 60)
 
         acc_test_list = []
@@ -150,7 +152,6 @@ class Server_FHE():
             + "_" + self.id
             + ".pth",
         )
-
 
     def train_overwriting(self, nb_rounds, lr_client, lr_pretrain, lr_retrain, params):
         print("#" * 60 + "\tFHE\t" + "#" * 60)
@@ -268,8 +269,7 @@ class Server_FHE():
                    + "_" + self.id
                    + ".pth", )
 
-
-    def pretrain(self, lr_pretrain : float) -> float:
+    def pretrain(self, lr_pretrain: float) -> float:
         bn_layers_requires_grad(self.model, False)
 
         embedding_mode_requies_grad(self.model, False)
@@ -324,7 +324,7 @@ class Server_FHE():
 
             acc_watermark_black, _ = watermark_detection_rate(self.model, self.detector, self.trigger_set)
 
-            print(f'\rBlack-Box WDR: {acc_watermark_black}, Loss: {round(accumulate_loss,3)}', end='', flush=True)
+            print(f'\rBlack-Box WDR: {acc_watermark_black}, Loss: {round(accumulate_loss, 3)}', end='', flush=True)
 
             epoch += 1
 
@@ -336,7 +336,7 @@ class Server_FHE():
 
         return acc_watermark_black
 
-    def retrain(self, lr_retrain : float, max_round : int) -> float:
+    def retrain(self, lr_retrain: float, max_round: int) -> float:
         bn_layers_requires_grad(self.model, False)
 
         embedding_mode_requies_grad(self.model, False)

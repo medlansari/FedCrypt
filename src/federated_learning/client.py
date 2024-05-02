@@ -93,3 +93,7 @@ class Client:
                 watermark_array.append(acc_watermark)
 
         return test_array, watermark_array
+
+
+    def train_fine_tuning(self):
+        return 0
