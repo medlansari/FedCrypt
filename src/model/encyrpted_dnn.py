@@ -45,7 +45,7 @@ class EncryptedDNN():
     def backward_detect(self, x, y_pred, y_ground):
         diff = y_ground-y_pred
         part1 = self.relu_derivated(self.fc1_weight.mm(x) + self.fc1_bias)
-        final = diff.mm(part1.transpose())
+        final = part1.mm(diff.transpose()).transpose()
 
         self._delta_detect_w = (-2/self.number_class) * final
         self._count += 1
