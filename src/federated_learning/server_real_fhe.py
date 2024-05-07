@@ -175,7 +175,7 @@ class Server_Real_FHE:
 
             for e, i in enumerate(loop):
 
-                # self.trigger_set.shuffle()
+                self.trigger_set.shuffle()
 
                 _, _, data_encrypted, label_encrypted = self.trigger_set[i]
                 a = time()
@@ -200,7 +200,7 @@ class Server_Real_FHE:
                 #     }
                 # )
 
-                accuracy += y_pred.argmax().item() == label_encrypted.argmax().item()
+                accuracy += int(y_pred.argmax().item() == label_encrypted.argmax().item())
 
                 # accuracy += (torch.abs(y_pred - label_encrypted) < 0.5)
 
@@ -214,10 +214,8 @@ class Server_Real_FHE:
 
 
             print(f"\nLoss at epoch {epoch} :", round(loss.item()/len(self.trigger_set),2))
+            print(accuracy)
             print(accuracy/len(self.trigger_set))
-
-            print(pred_array)
-            print(groundtruth_array)
 
         self.model_encrypted.decrypt()
 

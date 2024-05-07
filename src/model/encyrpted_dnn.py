@@ -19,6 +19,9 @@ class EncryptedDNN():
         self.detect_bias = torch_detector.fc1.bias.data.tolist()
         self.number_class = number_class
 
+        self.z = 0
+        self.a = 0
+
         self._delta_fc1_w = 0
         self._delta_fc1_b = 0
         self._delta_detect_w = 0
@@ -28,33 +31,36 @@ class EncryptedDNN():
         self.ctx = context_training
 
     def forward_watermarking(self, x):
-        z = self.relu(self.fc1_weight.mm(x) + self.fc1_bias)
+        a = self.fc1_weight.mm(x) + self.fc1_bias
+        self.a = deepcopy(a)
+        z = self.relu(a)
+        self.z = deepcopy(z)
         return self.detect_weight.mm(z) + self.detect_bias
 
     def backward_fc1(self, x, y_pred, y_ground):
-        diff = y_ground-y_pred
+        diff = y_pred-y_ground
         part1 = self.detect_weight.transpose().mm(diff)
-        part2 = part1.mul(self.relu_derivated(self.fc1_weight.mm(x) + self.fc1_bias))
+        part2 = part1.mul(self.relu_derivated(self.a))
         part2 = self.refresh(part2)
         x = self.refresh(x)
 
-        self._delta_fc1_b = (-2 / self.number_class) * deepcopy(part2.transpose())
+        self._delta_fc1_b = (2 / self.number_class) * deepcopy(part2.transpose())
 
         final = part2.mm(x.transpose())
 
-        self._delta_fc1_w = (-2/self.number_class) * final
+        self._delta_fc1_w = (2/self.number_class) * final
 
         return self._delta_fc1_w, self._delta_fc1_b
 
     def backward_detect(self, x, y_pred, y_ground):
-        diff = y_ground-y_pred
-        part1 = self.relu(self.fc1_weight.mm(x) + self.fc1_bias)
+        diff = y_pred-y_ground
+        part1 = self.z
 
-        self._delta_detect_b = (-2 / self.number_class) * deepcopy(diff)
+        self._delta_detect_b = (2/self.number_class) * deepcopy(diff)
 
-        final = part1.mm(diff.transpose()).transpose()
+        final = diff.mm(part1.transpose())
 
-        self._delta_detect_w = (-2/self.number_class) * final
+        self._delta_detect_w = (2/self.number_class) * final
         self._count += 1
 
         return self._delta_detect_w, self._delta_detect_b
@@ -70,15 +76,15 @@ class EncryptedDNN():
 
         lr = 1e-2
 
-        self.fc1_weight -= lr * self._delta_fc1_w #+ self.fc1_weight * 0.05
+        self.fc1_weight -= lr * self._delta_fc1_w + self.fc1_weight * 0.05
         self.fc1_bias -= lr * self._delta_fc1_b.reshape([self.fc1_weight_shape[0]])
         self._delta_fc1_w = 0
         self._delta_fc1_b = 0
 
         lr = 1e-2
 
-        # self.detect_weight -= lr * self._delta_detect_w #+ self.detect_weight * 0.05
-        # self.detect_bias -= lr * self._delta_detect_b.reshape([self.detect_weight_shape[0]])
+        self.detect_weight -= lr * self._delta_detect_w #+ self.detect_weight * 0.05
+        self.detect_bias -= lr * self._delta_detect_b.reshape([self.detect_weight_shape[0]])
         self._delta_detect_w = 0
         self._delta_detect_b = 0
 
