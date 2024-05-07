@@ -48,8 +48,6 @@ class Server_Simulated_FHE():
 
         self.dataset = dataset
         self.nb_clients = nb_clients
-        self.poly_client = False
-        self.poly_server = True
         self.model = ConvNet(True)
         self.model.to(DEVICE)
         self.train_subsets, self.subset_size, self.test_set = data_splitter(self.dataset,

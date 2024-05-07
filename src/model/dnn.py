@@ -6,10 +6,10 @@ from src.model.activation import identity, relu_poly
 
 class DNN(torch.nn.Module):
 
-    def __init__(self, n_features, poly):
+    def __init__(self, n_features, n_classes, poly):
         super(DNN, self).__init__()
         self.fc1 = torch.nn.Linear(n_features, 16)
-        self.fc2 = torch.nn.Linear(16, 2)
+        self.fc2 = torch.nn.Linear(16, n_classes)
 
         self.poly = poly
         if poly:
@@ -26,9 +26,9 @@ class DNN(torch.nn.Module):
         return out
 
 class Detector(nn.Module):
-    def __init__(self):
+    def __init__(self, n_classes):
         super().__init__()
-        self.fc1 = nn.Linear(16, 2)
+        self.fc1 = nn.Linear(16, n_classes)
 
         self.activation = identity
 

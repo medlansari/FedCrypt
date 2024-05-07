@@ -21,15 +21,10 @@ class MyTestCase(unittest.TestCase):
         x = torch.randn(32, 1)
         x_enc = ts.ckks_tensor(ctx_training, x.tolist())
 
-        y_ground = torch.ones(2, 1)
-        y_ground_enc = ts.ckks_tensor(ctx_training, y_ground.tolist())
-
         model_real = DNN(32, True)
         detector_real = Detector()
         model_enc = EncryptedDNN(model_real, detector_real, 2, ctx_training)
         model_enc.encrypt(ctx_training)
-
-        criterion = torch.nn.MSELoss(reduction="mean")
 
         y_pred = detector_real(model_real(x.T, True))
         y_pred_enc = model_enc.forward_watermarking(x_enc)
@@ -51,6 +46,7 @@ class MyTestCase(unittest.TestCase):
         x_enc = ts.ckks_tensor(ctx_training, x.tolist())
 
         y_ground = torch.ones(2, 1)
+        y_ground[0] = 0
         y_ground_enc = ts.ckks_tensor(ctx_training, y_ground.tolist())
 
         model_real = DNN(32, True)
