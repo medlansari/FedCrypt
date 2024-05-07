@@ -5,6 +5,7 @@ import torch.nn.functional as F
 from src.metric import accuracy, watermark_detection_rate
 from src.model.activation import identity
 from src.model.convnet import ConvNet
+from src.model.dnn import DNN
 from src.setting import DEVICE, LEARNING_RATE_CLIENT, MAX_EPOCH_CLIENT
 
 
@@ -23,7 +24,8 @@ class Client:
     """
 
     def __init__(self, model: str, weights: dict, train_set: torch.utils.data.DataLoader):
-        self.model = ConvNet(False)
+        # self.model = ConvNet(False)
+        self.model = DNN(32, 2, False)
         self.model.load_state_dict(weights)
         self.model.to(DEVICE)
         self.train_set = train_set

@@ -17,7 +17,7 @@ class DNN(torch.nn.Module):
         else:
             self.activation = torch.nn.ReLU
 
-    def forward(self, x, features):
+    def forward(self, x, features=False):
         x = x.view(x.size(0), -1)
         if features:
             return relu_poly(self.fc1(x))

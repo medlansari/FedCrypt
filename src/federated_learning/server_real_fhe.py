@@ -36,7 +36,7 @@ class Server_Real_FHE:
         # self.model_test.to(DEVICE) TODO
 
         self.id = id
-        self.max_round = 30
+        self.max_round = 5 #20
 
         # parameters
         poly_mod_degree = 8192
@@ -58,7 +58,7 @@ class Server_Real_FHE:
         acc_test_list = []
         acc_watermark_black_list = []
 
-        self.encrypted_pre_embedding(max_rounds)
+        self.encrypted_pre_embedding(self.max_round)
 
         print("Number of rounds :", nb_rounds)
 
@@ -164,6 +164,8 @@ class Server_Real_FHE:
 
         for epoch in (range(max_round)):
 
+            self.trigger_set.shuffle()
+
             accuracy = 0
 
             loss = 0
@@ -175,14 +177,14 @@ class Server_Real_FHE:
 
             for e, i in enumerate(loop):
 
-                self.trigger_set.shuffle()
-
                 _, _, data_encrypted, label_encrypted = self.trigger_set[i]
                 a = time()
                 y_pred = self.model_encrypted.forward_watermarking(data_encrypted)
                 y_pred = self.model_encrypted.refresh(y_pred)
-                self.model_encrypted.backward_fc1(data_encrypted, y_pred, label_encrypted)
-                self.model_encrypted.backward_detect(data_encrypted, y_pred, label_encrypted)
+                # self.model_encrypted.backward_fc1(data_encrypted, y_pred, label_encrypted)
+                # self.model_encrypted.backward_detect(data_encrypted, y_pred, label_encrypted)
+
+                self.model_encrypted.backward(data_encrypted, y_pred, label_encrypted)
 
                 # b = time() - a
                 # print("Time for embedding", round(b, 2))
@@ -208,7 +210,6 @@ class Server_Real_FHE:
 
                 self.model_encrypted.decrypt()
                 self.model_encrypted.encrypt(self.ctx_training)
-
 
                 self.model_encrypted.update_parameters()
 
