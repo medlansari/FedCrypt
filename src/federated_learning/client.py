@@ -6,6 +6,7 @@ from src.metric import accuracy, watermark_detection_rate
 from src.model.activation import identity
 from src.model.convnet import ConvNet
 from src.model.dnn import DNN
+from src.model.model_choice import model_choice
 from src.setting import DEVICE, LEARNING_RATE_CLIENT, MAX_EPOCH_CLIENT
 
 
@@ -23,9 +24,8 @@ class Client:
             Optionally, a test loader, trigger loader, and detector can be provided for testing and watermark detection.
     """
 
-    def __init__(self, model: str, weights: dict, train_set: torch.utils.data.DataLoader):
-        # self.model = ConvNet(False)
-        self.model = DNN(32, 2, False)
+    def __init__(self, model: str, weights: dict, input_size, num_classes, train_set: torch.utils.data.DataLoader):
+        self.model = model_choice(model, input_size, num_classes)
         self.model.load_state_dict(weights)
         self.model.to(DEVICE)
         self.train_set = train_set
@@ -70,6 +70,7 @@ class Client:
                 outputs = outputs.to(DEVICE)
 
                 with torch.autocast(device_type="cuda"):
+
                     outputs_predicted = self.model(inputs)
 
                     loss = criterion(outputs_predicted, outputs)

@@ -8,8 +8,8 @@ def main():
     time_save = str(time())
     # server = Server_Simulated_FHE("ConvNet", "CIFAR10", NB_CLIENTS, id=time_save)
     # server.train(MAX_ROUNDS, 1e-1, 1e-2,1e-3)
-    server = Server_Real_FHE("DNN", "MNIST", NB_CLIENTS, id=time_save)
-    server.train(MAX_ROUNDS, 1e-1, MAX_ROUNDS)
+    server = Server_Real_FHE("VGG", "CIFAR10", NB_CLIENTS, id=time_save)
+    server.train(MAX_ROUNDS, 1e-2, 5, 3)
 
 if __name__ == "__main__":
     main()

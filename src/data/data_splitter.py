@@ -94,7 +94,7 @@ def data_splitter(dataset: str, nb_clients: int) -> tuple[
         test_set.targets = torch.where(test_set.targets == 3, 0, 1)
 
         test_loader = torch.utils.data.DataLoader(
-            testset,
+            test_set,
             batch_size=BATCH_SIZE_SERVER,
             shuffle=True,
             num_workers=NUM_WORKERS,
@@ -137,6 +137,6 @@ def data_splitter(dataset: str, nb_clients: int) -> tuple[
 
     print("Size of the train set for each client :", subsets_size, "\n")
 
-    print("Size of the test set for each client :", len(test_set), "\n")
+    print("Size of the test set :", len(test_set), "\n")
 
     return subsets_loader, np.array(subset_size), test_loader
