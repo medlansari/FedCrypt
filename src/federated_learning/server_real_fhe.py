@@ -59,7 +59,7 @@ class Server_Real_FHE:
         acc_test_list = []
         acc_watermark_black_list = []
 
-        # self.encrypted_pre_embedding(epoch_pretrain)
+        self.encrypted_pre_embedding(epoch_pretrain)
 
         print("Number of rounds :", nb_rounds)
 
