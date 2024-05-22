@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from src.model.activation import relu_poly, identity
+from src.model.activation import ReLU_Poly, Identity
 
 
 class ConvNet(nn.Module):
@@ -20,7 +20,7 @@ class ConvNet(nn.Module):
         self.remove_activation = remove_activation
 
         if remove_activation:
-            self.activation = identity
+            self.activation = Identity
         else:
             self.activation = F.relu
 
@@ -49,7 +49,7 @@ class Detector(nn.Module):
 
         self.fc2 = nn.Sequential(nn.Linear(64, 10))
 
-        self.activation = relu_poly
+        self.activation = ReLU_Poly()
 
     def forward(self, x):
         z = self.activation(self.fc1(x))

@@ -3,7 +3,6 @@ import torch
 import torch.nn.functional as F
 
 from src.metric import accuracy, watermark_detection_rate
-from src.model.activation import identity
 from src.model.convnet import ConvNet
 from src.model.dnn import DNN
 from src.model.model_choice import model_choice

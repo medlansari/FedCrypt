@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 
-from src.model.activation import identity, relu_poly
+from src.model.activation import Identity, ReLU_Poly
 
 
 class DNN(torch.nn.Module):
@@ -19,7 +19,7 @@ class DNN(torch.nn.Module):
 
         self.poly = poly
         if poly:
-            self.activation = identity
+            self.activation = Identity
         else:
             self.activation = torch.nn.ReLU()
 
@@ -47,7 +47,7 @@ class Detector(nn.Module):
         self.fc1 = nn.Linear(32, 16)
         self.fc2 = nn.Linear(16, n_classes)
 
-        self.activation = relu_poly
+        self.activation = ReLU_Poly()
 
     def forward(self, x):
         z = self.activation(self.fc1(x))

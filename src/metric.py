@@ -1,6 +1,8 @@
 import torch
 from torch import nn
 import torch.nn.functional as F
+
+from src.model.vgg import ext_features, freeze, unfreeze
 from src.setting import DEVICE
 
 
@@ -41,6 +43,7 @@ def one_hot_encoding(y : torch.Tensor) -> torch.Tensor:
 
 def watermark_detection_rate(model : nn.Module, detector : nn.Module, test_loader : torch.utils.data.DataLoader) -> tuple[float, float]:
     model.eval()
+    detector.eval()
 
     with torch.no_grad():
         total = 0
@@ -52,14 +55,14 @@ def watermark_detection_rate(model : nn.Module, detector : nn.Module, test_loade
         criterion = nn.MSELoss()
 
         for inputs, outputs in test_loader:
-            inputs = inputs.to(DEVICE, memory_format=torch.channels_last)
+            inputs = inputs.to(DEVICE)#, memory_format=torch.channels_last)
 
             outputs = outputs.to(DEVICE)
 
             outputs = one_hot_encoding(outputs)
 
             with torch.autocast(device_type="cuda"):
-                outputs_predicted = model(inputs, True)
+                outputs_predicted = ext_features(model, inputs, True)
                 outputs_predicted = detector(outputs_predicted)
 
                 loss = criterion(outputs_predicted, outputs)

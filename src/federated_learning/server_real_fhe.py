@@ -43,8 +43,8 @@ class Server_Real_FHE:
         poly_mod_degree = 8192
         coeff_mod_bit_sizes = [40, 21, 21, 21, 21, 21, 21, 40]
         # create TenSEALContext
-        self.ctx_training = ts.context(ts.SCHEME_TYPE.CKKS, poly_mod_degree, -1, coeff_mod_bit_sizes)
-        self.ctx_training.global_scale = 2 ** 21
+        self.ctx_training = ts.context(ts.SCHEME_TYPE.CKKS, 16384, coeff_mod_bit_sizes=[60, 40, 40, 40, 40, 40, 40, 40, 40, 40]) # ts.context(ts.SCHEME_TYPE.CKKS, poly_mod_degree, -1, coeff_mod_bit_sizes)
+        self.ctx_training.global_scale =  pow(2, 40) # 2 ** 21
         self.ctx_training.generate_galois_keys()
 
         self.trigger_set = RandomTriggerSet(self.ctx_training, 10, 64, self.num_classes_watermarking)

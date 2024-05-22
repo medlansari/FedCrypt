@@ -3,9 +3,6 @@ from copy import deepcopy
 import numpy as np
 import torch
 import tenseal as ts
-from torch import nn
-
-from src.model.activation import identity, relu_poly
 
 class EncryptedModel():
 
@@ -72,7 +69,7 @@ class EncryptedModel():
 
         part3 = self.dA_w.transpose().mm(part2)
 
-        part3 = self.refresh(part3)
+        # part3 = self.refresh(part3)
 
         self._delta_target_w = (2/self.number_class) * part3.mm(x.transpose())
         self._delta_target_b = (2/self.number_class) * part3
@@ -84,12 +81,12 @@ class EncryptedModel():
         if self._count == 0:
             raise RuntimeError("You should at least run one forward iteration")
 
-        self._delta_target_w = self.refresh(self._delta_target_w)
-        self._delta_target_b = self.refresh(self._delta_target_b)
-        self._delta_dA_w = self.refresh(self._delta_dA_w)
-        self._delta_dA_b = self.refresh(self._delta_dA_b)
-        self._delta_dB_w = self.refresh(self._delta_dB_w)
-        self._delta_dB_b = self.refresh(self._delta_dB_b)
+        # self._delta_target_w = self.refresh(self._delta_target_w)
+        # self._delta_target_b = self.refresh(self._delta_target_b)
+        # self._delta_dA_w = self.refresh(self._delta_dA_w)
+        # self._delta_dA_b = self.refresh(self._delta_dA_b)
+        # self._delta_dB_w = self.refresh(self._delta_dB_w)
+        # self._delta_dB_b = self.refresh(self._delta_dB_b)
 
 
         lr = 1e-3
