@@ -55,15 +55,15 @@ def watermark_detection_rate(model : nn.Module, detector : nn.Module, test_loade
         criterion = nn.MSELoss()
 
         for inputs, outputs in test_loader:
-            inputs = inputs.to(DEVICE)#, memory_format=torch.channels_last)
+            inputs = inputs.to(DEVICE, memory_format=torch.channels_last)
 
             outputs = outputs.to(DEVICE)
 
             outputs = one_hot_encoding(outputs)
 
             with torch.autocast(device_type="cuda"):
-                outputs_predicted = ext_features(model, inputs, True)
-                outputs_predicted = detector(outputs_predicted)
+                features_predicted = model(inputs)
+                outputs_predicted = detector(features_predicted)
 
                 loss = criterion(outputs_predicted, outputs)
 

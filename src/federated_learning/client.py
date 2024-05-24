@@ -24,18 +24,17 @@ class Client:
     """
 
     def __init__(self, model: str, weights: dict, input_size, num_classes, train_set: torch.utils.data.DataLoader):
-        self.model = model_choice(model, input_size, num_classes)
+        self.model, self.model_linear = model_choice(model, input_size, num_classes)
         self.model.load_state_dict(weights)
+        self.model_linear.load_state_dict(weights)
         self.model.to(DEVICE)
+        self.model_linear.to(DEVICE)
         self.train_set = train_set
 
     def train(
             self,
             lr: float = LEARNING_RATE_CLIENT,
-            max_epoch: int = MAX_EPOCH_CLIENT,
-            test_loader: torch.utils.data.DataLoader = None,
-            trigger_loader: torch.utils.data.DataLoader = None,
-            detector: nn.Module = None
+            max_epoch: int = MAX_EPOCH_CLIENT
     ) -> tuple[list[float], list[float]]:
 
         optimizer = optim.SGD(self.model.parameters(), lr=lr)
@@ -43,20 +42,6 @@ class Client:
         criterion = nn.CrossEntropyLoss()
 
         test_array = []
-
-        watermark_array = []
-
-        if not (test_loader is None):
-            acc_test, acc_loss = accuracy(self.model, test_loader)
-
-            test_array.append(acc_test)
-
-        if not (trigger_loader is None):
-            self.model.activation = identity
-            acc_watermark, loss_watermark = watermark_detection_rate(self.model, detector, trigger_loader)
-            self.model.activation = F.relu
-
-            watermark_array.append(acc_watermark)
 
         self.model.train()
 
@@ -82,20 +67,70 @@ class Client:
 
                 optimizer.zero_grad(set_to_none=True)
 
-            if not (test_loader is None) and epoch % 5 == 0:
+        return test_array
+
+    def train_fine_tuning(
+            self,
+            lr: float = LEARNING_RATE_CLIENT,
+            max_epoch: int = MAX_EPOCH_CLIENT,
+            test_loader: torch.utils.data.DataLoader = None,
+            trigger_loader: torch.utils.data.DataLoader = None,
+            detector: nn.Module = None
+    ) -> tuple[list[float], list[float]]:
+
+        optimizer = optim.SGD(self.model.parameters(), lr=lr)
+
+        criterion = nn.CrossEntropyLoss()
+
+        test_array = []
+
+        watermark_array = []
+
+        acc_test, acc_loss = accuracy(self.model, test_loader)
+
+        test_array.append(acc_test)
+
+        acc_watermark, loss_watermark = watermark_detection_rate(self.model_linear, detector, trigger_loader)
+
+        print("Initial watermark detection rate: ", acc_watermark, "Initial watermark loss: ", loss_watermark)
+
+        watermark_array.append(acc_watermark)
+
+        self.model.train()
+
+        for epoch in range(max_epoch):
+            accumulate_loss = 0
+
+            for inputs, outputs in self.train_set:
+                inputs = inputs.to(DEVICE, memory_format=torch.channels_last)
+
+                outputs = outputs.to(DEVICE)
+
+                with torch.autocast(device_type="cuda"):
+                    outputs_predicted = self.model(inputs)
+
+                    loss = criterion(outputs_predicted, outputs)
+
+                loss.backward()
+
+                accumulate_loss += loss.item()
+
+                optimizer.step()
+
+                optimizer.zero_grad(set_to_none=True)
+
+            if epoch % 5 == 0:
                 acc_test, acc_loss = accuracy(self.model, test_loader)
 
                 test_array.append(acc_test)
 
-            if not (trigger_loader is None) and epoch % 5 == 0:
-                self.model.activation = identity
-                acc_watermark, loss_watermark = watermark_detection_rate(self.model, detector, trigger_loader)
-                self.model.activation = F.relu
+            if epoch % 5 == 0:
+                self.model_linear.load_state_dict(self.model.state_dict())
+
+                acc_watermark, loss_watermark = watermark_detection_rate(self.model_linear, detector, trigger_loader)
+
+                print("Epoch: ", epoch, ", Acc : ", acc_test,", WDR :", acc_watermark)
 
                 watermark_array.append(acc_watermark)
 
         return test_array, watermark_array
-
-
-    def train_fine_tuning(self):
-        return 0

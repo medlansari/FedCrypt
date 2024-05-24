@@ -1,175 +1,152 @@
-from torchvision import models
-import torch
-from torch.functional import F
-from torch import nn
-from torchvision.models.feature_extraction import create_feature_extractor
+import math
+
+import torch.nn as nn
+import torch.nn.functional
+import torch.nn.init as init
+
+__all__ = [
+    'VGG', 'vgg11', 'vgg11_bn', 'vgg13', 'vgg13_bn', 'vgg16', 'vgg16_bn',
+    'vgg19_bn', 'vgg19',
+]
 
 from src.model.activation import ReLU_Poly, Identity
 
 
-# class VGG11(nn.Module):
-#     def __init__(self, n_classes=10):
-#         super(VGG11, self).__init__()
-#         self.model = models.vgg11(weights=None)
-#         self.model.classifier[-1] = nn.Sequential(
-#             nn.Linear(in_features=4096, out_features=512),
-#             nn.ReLU(),
-#             nn.Linear(in_features=512, out_features=64),
-#             nn.ReLU(),
-#             nn.Linear(in_features=64, out_features=n_classes))
-#
-#         def replace_maxpool_with_avgpool(model):
-#             for name, module in model.named_children():
-#                 if isinstance(module, nn.MaxPool2d):
-#                     setattr(model, name, nn.AvgPool2d(module.kernel_size, module.stride, module.padding))
-#                 else:
-#                     replace_maxpool_with_avgpool(module)
-#
-#         replace_maxpool_with_avgpool(self.model)
-#
-#         self.extract_features = create_feature_extractor(self.model, return_nodes={"classifier.6.0" : "target"})
-#
-#     def forward(self, x, feature=False):
-#         if feature:
-#             return self.extract_features(x)["target"]
-#         else:
-#             return self.model(x)
-#
-#     def freeze(self):
-#         for param in self.model.parameters():
-#             param.requires_grad = False
-#         for param in self.model.classifier[-1][0].parameters():
-#             param.requires_grad = True
-#
-#         self.replace_activations(self.model, nn.ReLU, Identity())
-#
-#     def unfreeze(self):
-#         for param in self.model.parameters():
-#             param.requires_grad = True
-#
-#         self.replace_activations(self.model, Identity, nn.ReLU())
-#
-#     def targeted_layer(self):
-#         return self.model.classifier[-1][0]
-#
-#
-#     def replace_activations(self, model, old_activation, new_activation):
-#         for name, module in model.named_children():
-#             if isinstance(module, old_activation):
-#                 setattr(model, name, new_activation)
-#             else:
-#                 self.replace_activations(module, old_activation, new_activation)
+class VGG(nn.Module):
+    '''
+    VGG model 
+    '''
+    def __init__(self, features, linear):
+        super(VGG, self).__init__()
+        self.features = features
+        self.linear = linear
+        if linear:
+            self.classifier = nn.Sequential(
+                Identity(),
+                nn.Linear(512, 512),
+                # nn.BatchNorm1d(512),
+                Identity(),
+                Identity(),
+                nn.Linear(512, 512),
+                # nn.BatchNorm1d(512),
+                Identity()
+            )
 
-class VGG11(nn.Module):
-    def __init__(self, in_channels, num_classes=1000):
-        super(VGG11, self).__init__()
-        self.in_channels = in_channels
-        self.num_classes = num_classes
-        # convolutional layers
-        self.conv_layers = nn.Sequential(
-            nn.Conv2d(self.in_channels, 64, kernel_size=3, padding=1),
-            nn.ReLU(),
-            nn.MaxPool2d(kernel_size=2, stride=2),
-            nn.Conv2d(64, 128, kernel_size=3, padding=1),
-            nn.ReLU(),
-            nn.MaxPool2d(kernel_size=2, stride=2),
-            nn.Conv2d(128, 256, kernel_size=3, padding=1),
-            nn.ReLU(),
-            nn.Conv2d(256, 256, kernel_size=3, padding=1),
-            nn.ReLU(),
-            nn.MaxPool2d(kernel_size=2, stride=2),
-            nn.Conv2d(256, 512, kernel_size=3, padding=1),
-            nn.ReLU(),
-            nn.Conv2d(512, 512, kernel_size=3, padding=1),
-            nn.ReLU(),
-            nn.MaxPool2d(kernel_size=2, stride=2),
-            nn.Conv2d(512, 512, kernel_size=3, padding=1),
-            nn.ReLU(),
-            nn.Conv2d(512, 512, kernel_size=3, padding=1),
-            nn.ReLU(),
-            nn.AdaptiveAvgPool2d((7, 7))
-        )
-        # fully connected linear layers
-        self.classifier = nn.Sequential(
-            nn.Linear(in_features=512*7*7, out_features=4096),
-            nn.ReLU(),
-            nn.Dropout2d(0.5),
-            nn.Linear(in_features=4096, out_features=4096),
-            nn.ReLU(),
-            nn.Dropout2d(0.5),
-            nn.Linear(in_features=4096, out_features=self.num_classes)
-        )
+            self.trainable()
+
+        else:
+            self.classifier = nn.Sequential(
+                nn.Dropout(),
+                nn.Linear(512, 512),
+                # nn.BatchNorm1d(512),
+                nn.ReLU(True),
+                nn.Dropout(),
+                nn.Linear(512, 512),
+                # nn.BatchNorm1d(512),
+                nn.ReLU(True)
+            )
+        self.last_layer = nn.Linear(512, 10)
+         # Initialize weights
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
+                m.weight.data.normal_(0, math.sqrt(2. / n))
+                m.bias.data.zero_()
+
+
     def forward(self, x):
-        x = self.conv_layers(x)
-        # flatten to prepare for the fully connected layers
-        x = x.reshape(x.shape[0], -1)
+        x = self.features(x)
+        x = x.view(x.size(0), -1)
         x = self.classifier(x)
+        if not(self.linear):
+            return self.last_layer(x)
         return x
 
-def create_vgg11(n_classes=10):
-    model = VGG11(in_channels=3, num_classes=n_classes)
-    return model
+    def trainable(self):
+        # Geler tous les paramètres
+        for param in self.parameters():
+            param.requires_grad = False
 
-def replace_maxpool_with_avgpool(model):
-    for name, module in model.named_children():
-        if isinstance(module, nn.MaxPool2d):
-            setattr(model, name, nn.AvgPool2d(module.kernel_size, module.stride, module.padding))
-        elif isinstance(module, nn.AdaptiveMaxPool2d):
-            setattr(model, name, nn.AdaptiveAvgPool2d(module.output_size))
+        # Décongeler les paramètres de la dernière couche
+        for param in self.classifier[4].parameters():
+            param.requires_grad = True
+
+
+def make_layers(cfg, batch_norm=False):
+    layers = []
+    in_channels = 3
+    for v in cfg:
+        if v == 'M':
+            layers += [nn.MaxPool2d(kernel_size=2, stride=2)]
         else:
-            replace_maxpool_with_avgpool(module)
+            conv2d = nn.Conv2d(in_channels, v, kernel_size=3, padding=1)
+            if batch_norm:
+                layers += [conv2d, nn.BatchNorm2d(v), nn.ReLU(inplace=True)]
+            else:
+                layers += [conv2d, nn.ReLU(inplace=True)]
+            in_channels = v
+    return nn.Sequential(*layers)
 
-def replace_avgpool_with_maxpool(model):
-    for name, module in model.named_children():
-        if isinstance(module, nn.AvgPool2d):
-            setattr(model, name, nn.MaxPool2d(module.kernel_size, module.stride, module.padding))
-        elif isinstance(module, nn.AdaptiveAvgPool2d):
-            setattr(model, name, nn.AdaptiveMaxPool2d(module.output_size))
+def make_layers_linear(cfg, batch_norm=False):
+    layers = []
+    in_channels = 3
+    for v in cfg:
+        if v == 'M':
+            layers += [nn.AvgPool2d(kernel_size=2, stride=2)]
         else:
-            replace_avgpool_with_maxpool(module)
+            conv2d = nn.Conv2d(in_channels, v, kernel_size=3, padding=1)
+            if batch_norm:
+                layers += [conv2d, nn.BatchNorm2d(v), Identity()]
+            else:
+                layers += [conv2d, Identity()]
+            in_channels = v
+    return nn.Sequential(*layers)
 
-def ext_features(model, x, feature=False):
-    if feature:
-        extract_features = create_feature_extractor(model, return_nodes={"classifier.0": "target"})
-        return extract_features(x)["target"]
+
+cfg = {
+    'A': [64, 'M', 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'],
+    'B': [64, 64, 'M', 128, 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'],
+    'D': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'M', 512, 512, 512, 'M', 512, 512, 512, 'M'],
+    'E': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 256, 'M', 512, 512, 512, 512, 'M', 
+          512, 512, 512, 512, 'M'],
+}
+
+
+def vgg11(linear=False):
+    """VGG 11-layer model (configuration "A")"""
+    if linear:
+        return VGG(make_layers_linear(cfg['A']), linear)
     else:
-        return model(x)
+        return VGG(make_layers(cfg['A']), linear)
+
+
+def vgg11_bn(linear=False):
+    """VGG 11-layer model (configuration "A") with batch normalization"""
+    if linear:
+        return VGG(make_layers_linear(cfg['A'], batch_norm=True), linear)
+    else:
+        return VGG(make_layers(cfg['A'], batch_norm=True), linear)
+
+def ext_features(model, x, features=False):
+    return 0
 
 def freeze(model):
-    for param in model.parameters():
-        param.requires_grad = False
-    for param in model.classifier[0].parameters():
-        param.requires_grad = True
-    for name, module in model.named_modules():
-        if isinstance(module, (nn.Dropout, nn.Dropout2d)):
-            module.training = False
-    replace_activations(model, nn.ReLU, Identity())
-    replace_maxpool_with_avgpool(model)
+    return 0
 
 def unfreeze(model):
-    for param in model.parameters():
-        param.requires_grad = True
-    replace_activations(model, Identity, nn.ReLU())
-    replace_avgpool_with_maxpool(model)
-
-def targeted_layer(model):
-    return model.classifier[0]
-
-def replace_activations(model, old_activation, new_activation):
-    for name, module in model.named_children():
-        if isinstance(module, old_activation):
-            setattr(model, name, new_activation)
-        else:
-            replace_activations(module, old_activation, new_activation)
+    return 0
 
 class Detector(nn.Module):
+
     def __init__(self, n_classes):
         super().__init__()
-        self.fc1 = nn.Linear(4096, 64)
-        self.fc2 = nn.Linear(64, n_classes)
+        self.fc1 = nn.Linear(512, 128)
+        self.fc2 = nn.Linear(128, n_classes)
 
         self.activation = ReLU_Poly()
 
     def forward(self, x):
-        z = self.activation(self.fc1(x))
-        return self.fc2(z)
+        x = (x-x.mean(dim=0))/x.std(dim=0)
+        z1 = self.fc1(x)
+        z2 = self.activation(z1)
+        return self.fc2(z2)
