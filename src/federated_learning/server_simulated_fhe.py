@@ -16,7 +16,7 @@ from src.model.vgg import Detector, unfreeze, freeze, ext_features
 from src.model.model_choice import model_choice
 from src.setting import DEVICE, NUM_WORKERS, PRCT_TO_SELECT, MAX_EPOCH_CLIENT
 from src.model.freeze import bn_layers_requires_grad, embedding_mode_requies_grad
-from src.plot import plot_FHE
+from src.plot import plot_FHE, plot_FHE_overwriting
 
 
 class Server_Simulated_FHE():
@@ -77,7 +77,7 @@ class Server_Simulated_FHE():
         print("Dataset :", dataset)
         print("Number of clients :", self.nb_clients)
 
-    def train(self, nb_rounds: int, lr_client: float, lr_pretrain: float, lr_retrain: float) -> None:
+    def train(self, nb_rounds: int, lr_client: float, lr_pretrain: (float, float), lr_retrain: (float, float)) -> None:
         print("#" * 60 + " Dynamic Watermarking for Encrypted Model " + "#" * 60)
 
         acc_test_list = []
@@ -167,6 +167,117 @@ class Server_Simulated_FHE():
             + ".pth",
         )
 
+    def train_overwriting(self, original_trigger_set, original_detector, nb_rounds: int, lr_client: float, lr_pretrain: (float, float),
+                          lr_retrain: (float, float)) -> None:
+        print("#" * 60 + " Dynamic Watermarking for Encrypted Model " + "#" * 60)
+
+        acc_test_list = []
+        acc_watermark_org_list = []
+        acc_watermark_new_list = []
+
+        wdr_old, loss_old = watermark_detection_rate(self.model_linear, original_detector, original_trigger_set)
+
+        acc_watermark_org_list.append(wdr_old)
+
+        print("Old watermark detection rate: ", wdr_old, "Old watermark loss: ", loss_old)
+
+        wdr_new, loss_new = watermark_detection_rate(self.model_linear, self.detector, self.trigger_set)
+
+        acc_watermark_new_list.append(wdr_new)
+
+        print("New watermark detection rate: ", wdr_new, "New watermark loss: ", loss_old)
+
+        acc_test_list.append(accuracy(self.model, self.test_set)[0])
+
+        for name, param in self.model.named_parameters():
+            print(f'Layer: {name} | Trainable: {param.requires_grad}')
+
+        print("Number of rounds :", nb_rounds)
+
+        clients = []
+
+        for c in range(self.nb_clients):
+            client = Client(self.model_name, self.model.state_dict(),
+                            self.input_size, self.num_classes_task, self.train_subsets[c])
+
+            clients.append(client)
+
+        for r in range(nb_rounds):
+
+            print("")
+
+            selected_clients = random.sample(
+                range(self.nb_clients), int(PRCT_TO_SELECT * self.nb_clients)
+            )
+
+            loop = tqdm(selected_clients)
+
+            for idx, c in enumerate(loop):
+                clients[c].model.load_state_dict(self.model.state_dict())
+
+                clients[c].train(lr=lr_client)
+
+                loop.set_description(f"Round [{r}/{nb_rounds}]")
+
+            fedavg(np.array(clients), self.model, self.subset_size, selected_clients)
+
+            time_before = time()
+
+            wdr_old, loss_old = watermark_detection_rate(self.model_linear, original_detector, original_trigger_set)
+
+            acc_watermark_org_list.append(wdr_old)
+
+            print("Original Black-Box WDR:", wdr_old, loss_old)
+
+            wdr_new = self.encrypted_re_embedding(lr_retrain, self.max_round)
+
+            acc_watermark_new_list.append(wdr_new)
+
+            time_after = time() - time_before
+
+            print("Time for watermark embedding :", round(time_after, 2))
+
+            acc_test, loss_test = accuracy(self.model, self.test_set)
+
+            acc_test_list.append(acc_test)
+
+            print("Accuracy on the test set :", acc_test)
+            print("Loss on the test set :", loss_test)
+
+            # lr_retrain = lr_retrain * 0.99
+
+            lr_client = lr_client * 0.99
+
+        np.savez(
+            "./outputs/save_"
+            + "FHE_overwriting" + "_" + self.id + "_" +
+            str(time()),
+            acc_test_list,
+            acc_watermark_org_list,
+            acc_watermark_new_list
+        )
+
+        torch.save(
+            self.model.state_dict(),
+            "./outputs/save_"
+            + str(nb_rounds)
+            + "_"
+            + str(MAX_EPOCH_CLIENT)
+            + "_FHE"
+            + "_" + self.id
+            + ".pth",
+        )
+
+        torch.save(
+            self.detector.state_dict(),
+            "./outputs/detector_"
+            + str(nb_rounds)
+            + "_"
+            + str(MAX_EPOCH_CLIENT)
+            + "_FHE"
+            + "_" + self.id
+            + ".pth",
+        )
 
     def encrypted_pre_embedding(self, lr_pretrain: float) -> float:
 
@@ -224,7 +335,8 @@ class Server_Simulated_FHE():
 
             acc_watermark_black, loss_bb = watermark_detection_rate(self.model_linear, self.detector, self.trigger_set)
 
-            print(f'\rBlack-Box WDR: {acc_watermark_black}, Loss: {loss_bb}, Diff : {round(diff.item(),3)}', end='', flush=True)
+            print(f'\rBlack-Box WDR: {acc_watermark_black}, Loss: {loss_bb}, Diff : {round(diff.item(), 3)}', end='',
+                  flush=True)
 
             epoch += 1
 
@@ -246,7 +358,8 @@ class Server_Simulated_FHE():
 
         self.model_linear.load_state_dict(self.model.state_dict())
 
-        acc_watermark_black_before, loss_bb = watermark_detection_rate(self.model_linear, self.detector, self.trigger_set)
+        acc_watermark_black_before, loss_bb = watermark_detection_rate(self.model_linear, self.detector,
+                                                                       self.trigger_set)
 
         self.model_linear.trainable()
         self.detector.train()
@@ -295,7 +408,8 @@ class Server_Simulated_FHE():
 
                 accumulate_loss += loss.item()
 
-            acc_watermark_black, loss_watermark = watermark_detection_rate(self.model_linear, self.detector, self.trigger_set)
+            acc_watermark_black, loss_watermark = watermark_detection_rate(self.model_linear, self.detector,
+                                                                           self.trigger_set)
 
             loop.set_description(f"Epoch [{epoch}/{max_round}]")
 
@@ -305,8 +419,6 @@ class Server_Simulated_FHE():
                     "Watermarking Loss ": loss_watermark,
                 }
             )
-
-
 
         print("\n" + 60 * "#" + "\n")
 

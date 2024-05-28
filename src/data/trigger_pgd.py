@@ -23,7 +23,7 @@ class PGDSet(Dataset):
         It then loads the images from the directory and stores their paths and class names in the data list.
         """
         self.images_path = (
-            "./trigger_set/PGDSet/"
+            "./trigger_set/PGDAttack/"
         )
         folder_list = glob.glob(self.images_path + "*")
         self.data = []
