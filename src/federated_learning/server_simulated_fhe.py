@@ -376,6 +376,8 @@ class Server_Simulated_FHE():
 
         loop = tqdm(list(range(max_round)))
 
+        w0 = self.model_linear.classifier[4].weight.data.detach().clone()
+
         for idx, epoch in enumerate(loop):
 
             accumulate_loss = 0
@@ -397,9 +399,9 @@ class Server_Simulated_FHE():
 
                     blackbox_loss = criterion(outputs_predicted, outputs)
 
-                    regul = (1e-1 * self.model_linear.classifier[4].weight.pow(2).sum())
+                    regul = (1 / 2) * (w0 - self.model_linear.classifier[4].weight).pow(2).sum()
 
-                    loss = blackbox_loss + regul
+                    loss = blackbox_loss + (1e-2 * regul)
 
                 loss.backward()
 
