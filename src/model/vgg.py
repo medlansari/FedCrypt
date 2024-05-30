@@ -127,14 +127,6 @@ def vgg11_bn(linear=False):
     else:
         return VGG(make_layers(cfg['A'], batch_norm=True), linear)
 
-def ext_features(model, x, features=False):
-    return 0
-
-def freeze(model):
-    return 0
-
-def unfreeze(model):
-    return 0
 
 class Detector(nn.Module):
 

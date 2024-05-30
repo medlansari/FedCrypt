@@ -108,7 +108,7 @@ def plot_pruning_attack(pruning_rates: np.array, test_accuracy: np.array, wdr_dy
              linestyle="dashed")
     plt.fill_between(pruning_rates, wdr_mean - wdr_std, wdr_mean + wdr_std, color="green", alpha=0.25)
 
-    plt.plot(pruning_rates, 0.47 * np.ones(len(pruning_rates)), c="black", label="Treshold", linestyle='dashed')
+    plt.plot(pruning_rates, 0.47 * np.ones(len(pruning_rates)), c="black", label="Threshold", linestyle='dashed')
 
     plt.xlabel("Pruning rate")
     plt.ylabel("Accuracy")

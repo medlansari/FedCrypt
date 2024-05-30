@@ -12,7 +12,7 @@ from src.data.trigger_wafflepattern import WafflePattern
 from src.federated_learning.aggregation import fedavg
 from src.federated_learning.client import Client
 from src.metric import accuracy, watermark_detection_rate, one_hot_encoding
-from src.model.vgg import Detector, unfreeze, freeze, ext_features
+from src.model.vgg import Detector
 from src.model.model_choice import model_choice
 from src.setting import DEVICE, NUM_WORKERS, PRCT_TO_SELECT, MAX_EPOCH_CLIENT
 from src.model.freeze import bn_layers_requires_grad, embedding_mode_requies_grad
@@ -83,7 +83,7 @@ class Server_Simulated_FHE():
         acc_test_list = []
         acc_watermark_black_list = []
 
-        self.encrypted_pre_embedding(lr_pretrain)
+        # self.encrypted_pre_embedding(lr_pretrain)
 
         for name, param in self.model.named_parameters():
             print(f'Layer: {name} | Trainable: {param.requires_grad}')
@@ -119,9 +119,9 @@ class Server_Simulated_FHE():
 
             time_before = time()
 
-            acc_watermark_black = self.encrypted_re_embedding(lr_retrain, self.max_round)
+            # acc_watermark_black = self.encrypted_re_embedding(lr_retrain, self.max_round)
 
-            # acc_watermark_black = 0
+            acc_watermark_black = 0
 
             # self.model_linear.load_state_dict(self.model.state_dict())
             # acc_watermark_black, loss_bb = watermark_detection_rate(self.model_linear, self.detector, self.trigger_set)
@@ -139,9 +139,7 @@ class Server_Simulated_FHE():
             print("Accuracy on the test set :", acc_test)
             print("Loss on the test set :", loss_test)
 
-            # lr_retrain = lr_retrain * 0.99
-
-            lr_client = lr_client * 0.99
+            # lr_client = lr_client * 0.99
 
             plot_FHE(acc_test_list, acc_watermark_black_list, self.id)
 

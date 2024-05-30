@@ -2,7 +2,6 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 
-from src.model.vgg import ext_features, freeze, unfreeze
 from src.setting import DEVICE
 
 
