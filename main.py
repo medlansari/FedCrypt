@@ -9,10 +9,18 @@ def main():
     # lr_retrain = [(1e-3,1e-2),(1e-4,1e-2),(1e-2,1e-2)]
     # for lr_p in lr_pretrain:
     #     for lr_r in lr_retrain:
-    # for i in range(5):
-    time_save = str(time())
-    server = Server_Simulated_FHE("ConvMixer", "CIFAR10", NB_CLIENTS, id=time_save)
-    server.train(MAX_ROUNDS, 1e-2, (1e-3,1e-2), (1e-3,1e-2))
+    for i in range(5):
+
+        time_save = str(time())
+        server = Server_Simulated_FHE("ResNet", "CIFAR10", NB_CLIENTS, id=time_save)
+        server.train(MAX_ROUNDS, 1e-3, (1e-2, 1e-1), (1e-2, 1e-1))
+
+        time_save = str(time())
+        server = Server_Simulated_FHE("ConvMixer", "CIFAR10", NB_CLIENTS, id=time_save)
+        server.train(MAX_ROUNDS, 1e-2, (1e-2, 1e-1), (1e-2, 1e-1))
+    # time_save = str(time())
+    # server = Server_Simulated_FHE("VGG", "CIFAR10", NB_CLIENTS, id=time_save)
+    # server.train(MAX_ROUNDS, 1e-2, (1e-3,1e-2), (1e-3,1e-2))
     # time_save = str(time())
     # server = Server_Real_FHE("VGG", "CIFAR10", NB_CLIENTS, id=time_save)
     # server.train(MAX_ROUNDS, 1e-2, 5, 3)

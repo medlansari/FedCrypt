@@ -12,7 +12,7 @@ from src.data.trigger_wafflepattern import WafflePattern
 from src.federated_learning.aggregation import fedavg
 from src.federated_learning.client import Client
 from src.metric import accuracy, watermark_detection_rate, one_hot_encoding
-from src.model.vgg import Detector
+from src.model.convmixer import Detector
 from src.model.model_choice import model_choice
 from src.setting import DEVICE, NUM_WORKERS, PRCT_TO_SELECT, MAX_EPOCH_CLIENT
 from src.model.freeze import bn_layers_requires_grad, embedding_mode_requies_grad
@@ -83,7 +83,7 @@ class Server_Simulated_FHE():
         acc_test_list = []
         acc_watermark_black_list = []
 
-        # self.encrypted_pre_embedding(lr_pretrain)
+        self.encrypted_pre_embedding(lr_pretrain)
 
         for name, param in self.model.named_parameters():
             print(f'Layer: {name} | Trainable: {param.requires_grad}')
@@ -119,12 +119,9 @@ class Server_Simulated_FHE():
 
             time_before = time()
 
-            # acc_watermark_black = self.encrypted_re_embedding(lr_retrain, self.max_round)
+            acc_watermark_black = self.encrypted_re_embedding(lr_retrain, self.max_round)
 
-            acc_watermark_black = 0
-
-            # self.model_linear.load_state_dict(self.model.state_dict())
-            # acc_watermark_black, loss_bb = watermark_detection_rate(self.model_linear, self.detector, self.trigger_set)
+            # acc_watermark_black = 0
 
             time_after = time() - time_before
 
@@ -146,6 +143,8 @@ class Server_Simulated_FHE():
         torch.save(
             self.model.state_dict(),
             "./outputs/save_"
+            + self.model_name
+            + "_"
             + str(nb_rounds)
             + "_"
             + str(MAX_EPOCH_CLIENT)
@@ -157,6 +156,8 @@ class Server_Simulated_FHE():
         torch.save(
             self.detector.state_dict(),
             "./outputs/detector_"
+            + self.model_name
+            + "_"
             + str(nb_rounds)
             + "_"
             + str(MAX_EPOCH_CLIENT)
@@ -338,8 +339,8 @@ class Server_Simulated_FHE():
 
             epoch += 1
 
-            # if epoch > 100:
-            #     break
+            if epoch > 300:
+                break
 
         print("\n" + 60 * "#" + "\n")
 

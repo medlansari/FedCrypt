@@ -5,7 +5,7 @@ import torch.utils.data
 
 import torch.nn as nn
 
-from src.model.activation import Identity
+from src.model.activation import Identity, ReLU_Poly
 
 
 class Residual(nn.Module):
@@ -19,6 +19,7 @@ class Residual(nn.Module):
 class ConvMixer(nn.Module):
     def __init__(self, dim, depth, linear, kernel_size=9, patch_size=7, n_classes=1000):
         super().__init__()
+        self.linear = linear
         if linear:
             self.activation = Identity()
         else:
@@ -40,7 +41,14 @@ class ConvMixer(nn.Module):
         ])
         self.avgpool = nn.AdaptiveAvgPool2d((1,1))
         self.flatten = nn.Flatten()
-        self.fc = nn.Linear(dim, n_classes)
+        self.classifier = nn.Sequential(
+            nn.Identity(),
+            nn.Identity(),
+            nn.Identity(),
+            nn.Identity(),
+            nn.Linear(dim, 128),
+        )
+        self.fc = nn.Linear(128, n_classes)
 
     def forward(self, x):
         x = self.conv1(x)
@@ -50,6 +58,10 @@ class ConvMixer(nn.Module):
             x = block(x)
         x = self.avgpool(x)
         x = self.flatten(x)
+        x = self.classifier(x)
+        if self.linear:
+            return x
+        x = self.activation(x)
         x = self.fc(x)
         return x
 
@@ -67,3 +79,18 @@ def convmixer(linear=False):
         return ConvMixer(256, 8, True, 5, 2, 10)
     else:
         return ConvMixer(256, 8, False, 5, 2, 10)
+
+class Detector(nn.Module):
+
+    def __init__(self, n_classes):
+        super().__init__()
+        self.fc1 = nn.Linear(128, 64)
+        self.fc2 = nn.Linear(64, n_classes)
+
+        self.activation = ReLU_Poly()
+
+    def forward(self, x):
+        x = (x-x.mean(dim=0))/x.std(dim=0)
+        z1 = self.fc1(x)
+        z2 = self.activation(z1)
+        return self.fc2(z2)

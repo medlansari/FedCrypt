@@ -96,16 +96,14 @@ def plot_pruning_attack(pruning_rates: np.array, test_accuracy: np.array, wdr_dy
     wdr_mean = np.mean(wdr_dynamic, axis=0)
     wdr_std = np.std(wdr_dynamic, axis=0)
 
-    plt.figure(figsize=(5, 4), dpi=400)
+    plt.figure(figsize=(4, 3), dpi=400)
     plt.axes(facecolor='#f7f7f7')
 
     plt.plot(pruning_rates, accuracy_mean, c="blue", label="Test Set")
     plt.fill_between(pruning_rates, accuracy_mean - accuracy_std, accuracy_mean + accuracy_std, color="blue",
                      alpha=0.25)
 
-    plt.plot(pruning_rates, wdr_mean, c="green", label="Watermark",
-             markersize=3,
-             linestyle="dashed")
+    plt.plot(pruning_rates, wdr_mean, c="green", label="Watermark")
     plt.fill_between(pruning_rates, wdr_mean - wdr_std, wdr_mean + wdr_std, color="green", alpha=0.25)
 
     plt.plot(pruning_rates, 0.47 * np.ones(len(pruning_rates)), c="black", label="Threshold", linestyle='dashed')
@@ -114,10 +112,11 @@ def plot_pruning_attack(pruning_rates: np.array, test_accuracy: np.array, wdr_dy
     plt.ylabel("Accuracy")
     plt.xlim(0, 1)
     plt.ylim(0 - 0.1, 1 + 0.1)
-    plt.xticks(pruning_rates)
-    plt.yticks(pruning_rates)
+    plt.xticks(np.arange(0,1.01,0.2))
+    plt.yticks(np.arange(0,1.01,0.2))
     plt.grid(True)
     plt.legend()
+    plt.tight_layout()
     plt.savefig(
         path
         + "pruning.pdf"

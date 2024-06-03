@@ -4,7 +4,7 @@ import torch
 from src.data.data_splitter import data_splitter
 from src.data.trigger_wafflepattern import WafflePattern
 from src.federated_learning.client import Client
-from src.model.vgg import Detector
+from src.model.convmixer import Detector
 from src.setting import NUM_WORKERS
 
 path = "outputs"
