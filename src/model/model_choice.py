@@ -6,9 +6,9 @@ from src.model.resnet import ResNet
 from src.model.vgg import vgg11, vgg11_bn
 
 
-def model_choice(model : str, input_size, num_classes):
+def model_choice(model : str, input_size, num_classes, out_layer=0):
     if model == "ConvNet":
-        return ConvNet(False)
+        return ConvNet(False, out_layer), ConvNet(True, out_layer)
     elif model == "DNN":
         return DNN(input_size, num_classes, False)
     elif model == "VGG":
