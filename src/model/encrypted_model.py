@@ -69,7 +69,7 @@ class EncryptedModel():
 
         part3 = self.dA_w.transpose().mm(part2)
 
-        # part3 = self.refresh(part3)
+        part3 = self.refresh(part3)
 
         self._delta_target_w = (2/self.number_class) * part3.mm(x.transpose())
         self._delta_target_b = (2/self.number_class) * part3

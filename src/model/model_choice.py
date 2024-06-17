@@ -4,6 +4,7 @@ from src.model.convnet import ConvNet
 from src.model.dnn import DNN
 from src.model.resnet import ResNet
 from src.model.vgg import vgg11, vgg11_bn
+from src.model.vgg_encrypted import init_vgg
 
 
 def model_choice(model : str, input_size, num_classes, out_layer=0):
@@ -13,6 +14,8 @@ def model_choice(model : str, input_size, num_classes, out_layer=0):
         return DNN(input_size, num_classes, False)
     elif model == "VGG":
         return vgg11_bn(linear=False), vgg11_bn(linear=True) # VGG11(num_classes)
+    elif model == "VGG_encrypted":
+        return init_vgg(num_classes), init_vgg(num_classes)
     elif model == "ConvMixer":
         return convmixer(linear=False), convmixer(linear=True)
     elif model == "ResNet":

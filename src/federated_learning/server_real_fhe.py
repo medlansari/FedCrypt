@@ -30,7 +30,7 @@ class Server_Real_FHE:
         self.num_classes_watermarking = 2
         self.input_size = 32 * 32
 
-        self.model = model_choice(self.model_name, self.input_size, self.num_classes_task)
+        self.model = model_choice(self.model_name, self.input_size, self.num_classes_task)[0]
         self.model.to(DEVICE)
 
         self.train_subsets, self.subset_size, self.test_set = data_splitter(self.dataset, self.nb_clients)
@@ -40,10 +40,12 @@ class Server_Real_FHE:
         self.id = id
 
         # parameters
-        poly_mod_degree = 8192
-        coeff_mod_bit_sizes = [40, 21, 21, 21, 21, 21, 21, 40]
+        # poly_mod_degree = 8192
+        # coeff_mod_bit_sizes = [40, 21, 21, 21, 21, 21, 21, 40]
+        # self.ctx_training = ts.context(ts.SCHEME_TYPE.CKKS, poly_mod_degree, -1, coeff_mod_bit_sizes)
+        # self.ctx_training.global_scale = 2 ** 21
         # create TenSEALContext
-        self.ctx_training = ts.context(ts.SCHEME_TYPE.CKKS, 16384, coeff_mod_bit_sizes=[60, 40, 40, 40, 40, 40, 40, 40, 40, 40]) # ts.context(ts.SCHEME_TYPE.CKKS, poly_mod_degree, -1, coeff_mod_bit_sizes)
+        self.ctx_training = ts.context(ts.SCHEME_TYPE.CKKS, 16384, coeff_mod_bit_sizes=[60, 40, 40, 40, 40, 40, 40, 40, 40, 40]) #
         self.ctx_training.global_scale =  pow(2, 40) # 2 ** 21
         self.ctx_training.generate_galois_keys()
 
@@ -59,7 +61,7 @@ class Server_Real_FHE:
         acc_test_list = []
         acc_watermark_black_list = []
 
-        self.encrypted_pre_embedding(epoch_pretrain)
+        self.encrypted_re_embedding(epoch_pretrain)
 
         print("Number of rounds :", nb_rounds)
 
