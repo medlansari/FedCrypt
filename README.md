@@ -1,4 +1,4 @@
-# FedCrypt
+# <span style="background-color: #D5E8D4;"> FedCrypt </span>
 
 This repository contains the implementation of the paper "FedCrypt: A Dynamic White-Box Watermarking Scheme for Homomorphic Federated Learning".
 
@@ -47,7 +47,6 @@ performed using FedCrypt.</figcaption>
     <p>Le texte que vous souhaitez afficher à gauche de l'image.</p>
   </div>
 </div>
-
 
 ## Setup
 
