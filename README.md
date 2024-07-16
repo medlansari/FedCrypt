@@ -4,7 +4,50 @@ This repository contains the implementation of the paper "FedCrypt: A Dynamic Wh
 
 The paper is under review to the IEEE Transactions on Dependable and Secure Computing journal.
 
-![alt text](overview.png "Overview of FedCrypt")
+<figure>
+  <img
+  src="overview.png"
+  alt="The beautiful MDN logo.">
+  <figcaption>Figure 1 : Overview of the FedCrypt scheme.</figcaption>
+</figure>
+
+## Introduction
+
+*FedCrypt* the first dynamic white-box watermarking technique compatible with HE in FL. FedCrypt involves training a 
+projection function on the activations of the encrypted model using a trigger set, preserving client privacy and enabling 
+new verification protocols for joint ownership proof between the server and clients without disclosing private information. 
+
+## The FedCrypt Algorithm
+
+The *FedCrypt* algorithm consists on embedding a watermark in the encrypted model from the server-side.
+
+<div style="display: flex; align-items: center; justify-content: space-between;">
+  <div style="flex: 50%;">
+    <p>To do so, the server </p>
+  </div>
+  <div style="flex: 50%;">
+    <figure>
+      <img src="watermarking.png" alt="The beautiful MDN logo." style="width: 100%;">
+      <figcaption>Figure 2 : Illustration of the difference between the training process and the watermarking process on a 
+four-layer neural network.</figcaption>
+    </figure>
+  </div>
+</div>
+
+<div style="display: flex; align-items: center; justify-content: space-between;">
+  
+  <div style="flex: 50%;">
+    <figure>
+      <img src="trigger-set_construction.png" alt="The beautiful MDN logo." style="width: 100%;">
+      <figcaption>Figure 3 : Illustration of the possible generation and corresponding verification protocols that can be 
+performed using FedCrypt.</figcaption>
+    </figure>
+  </div>
+    <div style="flex: 50%;">
+    <p>Le texte que vous souhaitez afficher à gauche de l'image.</p>
+  </div>
+</div>
+
 
 ## Setup
 
@@ -63,7 +106,7 @@ Where :
 Then the FL training can be performed using the following line :
 
 ```python
-    server.train(max_rounds, lr_client, lr_pretrain, lr_retrain)
+server.train(max_rounds, lr_client, lr_pretrain, lr_retrain)
 ```
 
 Where :
