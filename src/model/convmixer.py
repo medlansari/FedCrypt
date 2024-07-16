@@ -16,6 +16,7 @@ class Residual(nn.Module):
     def forward(self, x):
         return self.fn(x) + x
 
+
 class ConvMixer(nn.Module):
     def __init__(self, dim, depth, linear, kernel_size=9, patch_size=7, n_classes=1000):
         super().__init__()
@@ -39,7 +40,7 @@ class ConvMixer(nn.Module):
                 nn.BatchNorm2d(dim)
             ) for _ in range(depth)
         ])
-        self.avgpool = nn.AdaptiveAvgPool2d((1,1))
+        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
         self.flatten = nn.Flatten()
         self.classifier = nn.Sequential(
             nn.Identity(),
@@ -74,11 +75,13 @@ class ConvMixer(nn.Module):
         for param in self.classifier.parameters():
             param.requires_grad = True
 
+
 def convmixer(linear=False):
     if linear:
         return ConvMixer(256, 8, True, 5, 2, 10)
     else:
         return ConvMixer(256, 8, False, 5, 2, 10)
+
 
 class Detector(nn.Module):
 
@@ -90,7 +93,7 @@ class Detector(nn.Module):
         self.activation = ReLU_Poly()
 
     def forward(self, x):
-        x = (x-x.mean(dim=0))/x.std(dim=0)
+        x = (x - x.mean(dim=0)) / x.std(dim=0)
         z1 = self.fc1(x)
         z2 = self.activation(z1)
         return self.fc2(z2)

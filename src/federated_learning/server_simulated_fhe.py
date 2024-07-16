@@ -166,7 +166,8 @@ class Server_Simulated_FHE():
             + ".pth",
         )
 
-    def train_overwriting(self, original_trigger_set, original_detector, nb_rounds: int, lr_client: float, lr_pretrain: (float, float),
+    def train_overwriting(self, original_trigger_set, original_detector, nb_rounds: int, lr_client: float,
+                          lr_pretrain: (float, float),
                           lr_retrain: (float, float)) -> None:
         print("#" * 60 + " Dynamic Watermarking for Encrypted Model " + "#" * 60)
 

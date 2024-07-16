@@ -5,7 +5,7 @@ import torch.nn.functional as F
 from src.setting import DEVICE
 
 
-def accuracy(model : nn.Module, loader : torch.utils.data.DataLoader) -> tuple[float, float]:
+def accuracy(model: nn.Module, loader: torch.utils.data.DataLoader) -> tuple[float, float]:
     model.eval()
 
     with torch.no_grad():
@@ -36,11 +36,12 @@ def accuracy(model : nn.Module, loader : torch.utils.data.DataLoader) -> tuple[f
     return round(correct / total, 3), round(accumulate_loss / len(loader), 3)
 
 
-def one_hot_encoding(y : torch.Tensor) -> torch.Tensor:
-    return (F.one_hot(y.to(torch.int64), num_classes=10) ).float()
+def one_hot_encoding(y: torch.Tensor) -> torch.Tensor:
+    return (F.one_hot(y.to(torch.int64), num_classes=10)).float()
 
 
-def watermark_detection_rate(model : nn.Module, detector : nn.Module, test_loader : torch.utils.data.DataLoader) -> tuple[float, float]:
+def watermark_detection_rate(model: nn.Module, detector: nn.Module, test_loader: torch.utils.data.DataLoader) -> tuple[
+    float, float]:
     model.eval()
     detector.eval()
 

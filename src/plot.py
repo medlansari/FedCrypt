@@ -52,7 +52,7 @@ def plot_FHE_overwriting(acc_test: list[float], wdr_org: list[float], wdr_new: l
     # %%
     fig = plt.figure(figsize=(4, 3), dpi=400)
     plt.axes(facecolor='#f7f7f7')
-    epoch = np.arange(0, len(acc_test)+1, 1)
+    epoch = np.arange(0, len(acc_test) + 1, 1)
     plt.plot(epoch, accuracy_mean, c="blue", label="Test Set")
     plt.fill_between(epoch, accuracy_mean - accuracy_std, accuracy_mean + accuracy_std, color="blue", alpha=0.25)
 
@@ -69,7 +69,7 @@ def plot_FHE_overwriting(acc_test: list[float], wdr_org: list[float], wdr_new: l
     plt.ylabel("Accuracy")
     plt.xlim(0, len(acc_test))
     plt.ylim(0, 1)
-    plt.xticks(np.arange(0, len(acc_test)+1, 10))
+    plt.xticks(np.arange(0, len(acc_test) + 1, 10))
     plt.yticks(np.arange(0, 1.01, 0.2))
     plt.grid(True)
     plt.legend()
@@ -112,8 +112,8 @@ def plot_pruning_attack(pruning_rates: np.array, test_accuracy: np.array, wdr_dy
     plt.ylabel("Accuracy")
     plt.xlim(0, 1)
     plt.ylim(0 - 0.1, 1 + 0.1)
-    plt.xticks(np.arange(0,1.01,0.2))
-    plt.yticks(np.arange(0,1.01,0.2))
+    plt.xticks(np.arange(0, 1.01, 0.2))
+    plt.yticks(np.arange(0, 1.01, 0.2))
     plt.grid(True)
     plt.legend()
     plt.tight_layout()

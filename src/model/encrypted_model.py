@@ -4,6 +4,7 @@ import numpy as np
 import torch
 import tenseal as ts
 
+
 class EncryptedModel():
 
     def __init__(self, torch_dnn, torch_detector, number_class, context_training):
@@ -58,24 +59,23 @@ class EncryptedModel():
     def backward(self, x, y_pred, y_ground):
         diff = y_pred - y_ground
 
-        self._delta_dB_w = (2/self.number_class) * diff.mm(self.z2.transpose())
-        self._delta_dB_b = (2/self.number_class) * diff
+        self._delta_dB_w = (2 / self.number_class) * diff.mm(self.z2.transpose())
+        self._delta_dB_b = (2 / self.number_class) * diff
 
         part1 = self.dB_w.transpose().mm(diff)
         part2 = part1.mul(self.relu_derivated(self.z2))
 
-        self._delta_dA_w = (2/self.number_class) * part2.mm(self.z1.transpose())
-        self._delta_dA_b = (2/self.number_class) * part2
+        self._delta_dA_w = (2 / self.number_class) * part2.mm(self.z1.transpose())
+        self._delta_dA_b = (2 / self.number_class) * part2
 
         part3 = self.dA_w.transpose().mm(part2)
 
         part3 = self.refresh(part3)
 
-        self._delta_target_w = (2/self.number_class) * part3.mm(x.transpose())
-        self._delta_target_b = (2/self.number_class) * part3
+        self._delta_target_w = (2 / self.number_class) * part3.mm(x.transpose())
+        self._delta_target_b = (2 / self.number_class) * part3
 
         self._count += 1
-
 
     def update_parameters_regul(self):
         if self._count == 0:
@@ -88,11 +88,11 @@ class EncryptedModel():
         # self._delta_dB_w = self.refresh(self._delta_dB_w)
         # self._delta_dB_b = self.refresh(self._delta_dB_b)
 
-
         lr = 1e-3
 
-        self.target_w -= lr * self._delta_target_w  + (self.target_w_org - self.target_w) * 0.05
-        self.target_b -= lr * self._delta_target_b.reshape([self.target_w_shape[0]]) + (self.target_b_org - self.target_b) * 0.05
+        self.target_w -= lr * self._delta_target_w + (self.target_w_org - self.target_w) * 0.05
+        self.target_b -= lr * self._delta_target_b.reshape([self.target_w_shape[0]]) + (
+                    self.target_b_org - self.target_b) * 0.05
         self._delta_fc1_w = 0
         self._delta_fc1_b = 0
 
@@ -121,7 +121,6 @@ class EncryptedModel():
         self._delta_dA_b = self.refresh(self._delta_dA_b)
         self._delta_dB_w = self.refresh(self._delta_dB_w)
         self._delta_dB_b = self.refresh(self._delta_dB_b)
-
 
         lr = 1e-3
 

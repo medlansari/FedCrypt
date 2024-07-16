@@ -49,7 +49,6 @@ def pruning(model, percentage_to_remove) -> None:
 
 
 def pruning_attack(ids: list[str]) -> None:
-
     train_subsets, subset_size, test_set = data_splitter("CIFAR10", 1)
 
     trigger_set = torch.utils.data.DataLoader(

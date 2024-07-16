@@ -17,6 +17,7 @@ class PGDSet(Dataset):
         img_dim (tuple): The dimensions of the images.
         transform (callable): The transformation to apply to the images.
     """
+
     def __init__(self):
         """
         Initializes the PGDSet with the path to the images and an empty list for the data.

@@ -22,8 +22,6 @@ def overwriting_attack(model_name, input_size, num_classes_task, max_epoch, lr, 
         pin_memory=True,
     )
 
-
-
     new_watermark_set = torch.utils.data.DataLoader(
         PGDSet(),
         batch_size=10,
@@ -33,7 +31,6 @@ def overwriting_attack(model_name, input_size, num_classes_task, max_epoch, lr, 
     )
 
     for i in range(5):
-
         original_detector = Detector(num_classes_task)
         original_detector.load_state_dict(torch.load(path + "/detector_" + id + ".pth"))
         original_detector.to("cuda")

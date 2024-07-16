@@ -20,6 +20,7 @@ class WafflePattern(Dataset):
         RGB (bool): A flag to indicate if the images are in RGB format.
         features (bool): A flag to indicate if the features are to be extracted.
     """
+
     def __init__(self, RGB=True, features=False):
         """
         Initializes the WafflePattern with the path to the images and an empty list for the data.

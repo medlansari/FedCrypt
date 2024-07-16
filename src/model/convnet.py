@@ -26,8 +26,6 @@ class ConvNet(nn.Module):
         self.fc2 = nn.Linear(120, 84)
         self.fc3 = nn.Linear(84, 10)
 
-
-
     def forward(self, x):
         z = self.bn1(self.conv1(x))
         z = self.pool(self.activation(z))

@@ -7,10 +7,10 @@ from torch import nn
 
 from src.model.activation import identity, relu_poly
 
+
 class EncryptedDNN():
 
     def __init__(self, torch_dnn, torch_detector, number_class, context_training):
-
         self.fc1_weight_shape = torch_dnn.fc1.weight.data.shape
         self.fc1_weight = torch_dnn.fc1.weight.data.tolist()
         self.fc1_bias = torch_dnn.fc1.bias.data.tolist()
@@ -38,17 +38,17 @@ class EncryptedDNN():
         return self.detect_weight.mm(z) + self.detect_bias
 
     def backward_fc1(self, x, y_pred, y_ground):
-        self.diff = y_pred-y_ground
+        self.diff = y_pred - y_ground
         part1 = self.detect_weight.transpose().mm(self.diff)
         part2 = part1.mul(self.relu_derivated(self.a))
         # part2 = self.refresh(part2)
         # x = self.refresh(x)
 
-        self._delta_fc1_b = (2/self.number_class) * deepcopy(part2.transpose())
+        self._delta_fc1_b = (2 / self.number_class) * deepcopy(part2.transpose())
 
         final = part2.mm(x.transpose())
 
-        self._delta_fc1_w = (2/self.number_class) * final
+        self._delta_fc1_w = (2 / self.number_class) * final
 
         return self._delta_fc1_w, self._delta_fc1_b
 
@@ -56,11 +56,11 @@ class EncryptedDNN():
         diff = self.diff
         part1 = self.z
 
-        self._delta_detect_b = (2/self.number_class) * deepcopy(diff)
+        self._delta_detect_b = (2 / self.number_class) * deepcopy(diff)
 
         final = diff.mm(part1.transpose())
 
-        self._delta_detect_w = (2/self.number_class) * final
+        self._delta_detect_w = (2 / self.number_class) * final
         self._count += 1
 
         return self._delta_detect_w, self._delta_detect_b
@@ -84,7 +84,6 @@ class EncryptedDNN():
 
         self._delta_detect_w = (2 / self.number_class) * final
         self._count += 1
-
 
     def update_parameters(self):
         if self._count == 0:

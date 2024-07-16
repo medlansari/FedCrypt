@@ -37,11 +37,10 @@ class RandomTriggerSet(Dataset):
         self.data = (self.data - np.mean(self.data)) / np.std(self.data)
         self.labels = np.eye(num_classes)[self.labels]
 
-        self.data_encrypted = [ts.ckks_tensor(ctx_training,x.reshape(-1,1).tolist()) for x in self.data]
-        self.labels_encrypted = [ts.ckks_tensor(ctx_training,x.reshape(-1,1).tolist()) for x in self.labels]
+        self.data_encrypted = [ts.ckks_tensor(ctx_training, x.reshape(-1, 1).tolist()) for x in self.data]
+        self.labels_encrypted = [ts.ckks_tensor(ctx_training, x.reshape(-1, 1).tolist()) for x in self.labels]
 
         self.num_samples = num_samples
-
 
     def shuffle(self):
         idx = np.random.permutation(self.num_samples)

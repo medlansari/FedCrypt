@@ -31,7 +31,7 @@ def data_splitter(dataset: str, nb_clients: int) -> tuple[
     """
 
     batch_size = BATCH_SIZE_CLIENT
-    print("Selected Dataset : ", dataset)
+    print("Selected Dataset : ", dataset, "\n")
 
     if dataset == "CIFAR10":
 

@@ -16,6 +16,7 @@ class VGG(nn.Module):
     '''
     VGG model 
     '''
+
     def __init__(self, features, linear):
         super(VGG, self).__init__()
         self.features = features
@@ -46,19 +47,18 @@ class VGG(nn.Module):
                 nn.ReLU(True)
             )
         self.last_layer = nn.Linear(512, 10)
-         # Initialize weights
+        # Initialize weights
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
                 n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
                 m.weight.data.normal_(0, math.sqrt(2. / n))
                 m.bias.data.zero_()
 
-
     def forward(self, x):
         x = self.features(x)
         x = x.view(x.size(0), -1)
         x = self.classifier(x)
-        if not(self.linear):
+        if not (self.linear):
             return self.last_layer(x)
         return x
 
@@ -87,6 +87,7 @@ def make_layers(cfg, batch_norm=False):
             in_channels = v
     return nn.Sequential(*layers)
 
+
 def make_layers_linear(cfg, batch_norm=False):
     layers = []
     in_channels = 3
@@ -107,7 +108,7 @@ cfg = {
     'A': [64, 'M', 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'],
     'B': [64, 64, 'M', 128, 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'],
     'D': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'M', 512, 512, 512, 'M', 512, 512, 512, 'M'],
-    'E': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 256, 'M', 512, 512, 512, 512, 'M', 
+    'E': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 256, 'M', 512, 512, 512, 512, 'M',
           512, 512, 512, 512, 'M'],
 }
 
@@ -138,7 +139,7 @@ class Detector(nn.Module):
         self.activation = ReLU_Poly()
 
     def forward(self, x):
-        x = (x-x.mean(dim=0))/x.std(dim=0)
+        x = (x - x.mean(dim=0)) / x.std(dim=0)
         z1 = self.fc1(x)
         z2 = self.activation(z1)
         return self.fc2(z2)

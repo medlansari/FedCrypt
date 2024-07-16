@@ -12,10 +12,11 @@ from src.model.convnet import ConvNet
 from src.setting import DEVICE
 
 
-def set_model_params_to_value(model : nn.Module, value : float) -> None:
+def set_model_params_to_value(model: nn.Module, value: float) -> None:
     with torch.no_grad():
         for param in model.parameters():
             param.fill_(value)
+
 
 def check_model_params_value(model, value):
     for param in model.parameters():
@@ -23,10 +24,10 @@ def check_model_params_value(model, value):
             return False
     return True
 
+
 class MyTestCase(unittest.TestCase):
     def test_two_clients(self):
-
-        train_subsets, subset_size, test_set = data_splitter("MNIST",2)
+        train_subsets, subset_size, test_set = data_splitter("MNIST", 2)
 
         model = ConvNet(False)
         set_model_params_to_value(model, 32.0)
@@ -49,7 +50,7 @@ class MyTestCase(unittest.TestCase):
 
         fedavg(clients, model, subset_size, selected_clients)
 
-        all_close = check_model_params_value(model, (32+48)/2)
+        all_close = check_model_params_value(model, (32 + 48) / 2)
 
         self.assertEqual(True, all_close)  # add assertion here
 
@@ -90,6 +91,7 @@ class MyTestCase(unittest.TestCase):
         all_close = check_model_params_value(model, (32 + 48 + 58 + 68 + 78) / 5)
 
         self.assertEqual(True, all_close)  # add assertion here
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -7,13 +7,13 @@ from src.model.vgg import vgg11, vgg11_bn
 from src.model.vgg_encrypted import init_vgg
 
 
-def model_choice(model : str, input_size, num_classes, out_layer=0):
+def model_choice(model: str, input_size, num_classes, out_layer=0):
     if model == "ConvNet":
         return ConvNet(False, out_layer), ConvNet(True, out_layer)
     elif model == "DNN":
         return DNN(input_size, num_classes, False)
     elif model == "VGG":
-        return vgg11_bn(linear=False), vgg11_bn(linear=True) # VGG11(num_classes)
+        return vgg11_bn(linear=False), vgg11_bn(linear=True)  # VGG11(num_classes)
     elif model == "VGG_encrypted":
         return init_vgg(num_classes), init_vgg(num_classes)
     elif model == "ConvMixer":

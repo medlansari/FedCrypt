@@ -54,7 +54,6 @@ class Client:
                 outputs = outputs.to(DEVICE)
 
                 with torch.autocast(device_type="cuda"):
-
                     outputs_predicted = self.model(inputs)
 
                     loss = criterion(outputs_predicted, outputs)
@@ -170,7 +169,8 @@ class Client:
 
         new_watermark_array.append(acc_watermark)
 
-        acc_watermark, loss_watermark = watermark_detection_rate(self.model_linear, original_detector, original_trigger_loader)
+        acc_watermark, loss_watermark = watermark_detection_rate(self.model_linear, original_detector,
+                                                                 original_trigger_loader)
 
         print("Old watermark detection rate: ", acc_watermark, "Old watermark loss: ", loss_watermark)
 
@@ -184,7 +184,6 @@ class Client:
             accumulate_loss = 0
 
             for inputs, outputs in self.train_set:
-
                 inputs = inputs.to(DEVICE, memory_format=torch.channels_last)
 
                 outputs = outputs.to(DEVICE)
@@ -240,12 +239,14 @@ class Client:
 
             new_watermark_array.append(acc_watermark)
 
-            acc_old_watermark, loss_old_watermark = watermark_detection_rate(self.model_linear, original_detector, original_trigger_loader)
+            acc_old_watermark, loss_old_watermark = watermark_detection_rate(self.model_linear, original_detector,
+                                                                             original_trigger_loader)
 
             new_watermark_array.append(acc_watermark)
 
             old_watermark_array.append(acc_old_watermark)
 
-            print(f"\rEpoch: {epoch}, Acc : {acc_test}, New WDR : {acc_watermark}, Old WDR : {acc_old_watermark}", end='', flush=True)
+            print(f"\rEpoch: {epoch}, Acc : {acc_test}, New WDR : {acc_watermark}, Old WDR : {acc_old_watermark}",
+                  end='', flush=True)
 
         return test_array, new_watermark_array, old_watermark_array
