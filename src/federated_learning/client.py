@@ -1,10 +1,7 @@
-from torch import optim, nn
 import torch
-import torch.nn.functional as F
+from torch import optim, nn
 
 from src.metric import accuracy, watermark_detection_rate, one_hot_encoding
-from src.model.convnet import ConvNet
-from src.model.dnn import DNN
 from src.model.model_choice import model_choice
 from src.setting import DEVICE, LEARNING_RATE_CLIENT, MAX_EPOCH_CLIENT
 

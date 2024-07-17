@@ -1,7 +1,7 @@
 import numpy as np
 import tenseal as ts
+from sklearn.datasets import make_classification
 from torch.utils.data import Dataset
-from sklearn.datasets import make_classification, make_blobs
 
 
 class RandomDataset(Dataset):

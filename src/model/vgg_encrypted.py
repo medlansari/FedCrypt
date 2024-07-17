@@ -1,6 +1,6 @@
-from torchvision import models
 import torch
 from torch import nn
+from torchvision import models
 
 
 def init_vgg(n_classes=10):

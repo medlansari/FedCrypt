@@ -3,9 +3,6 @@ from copy import deepcopy
 import numpy as np
 import torch
 import tenseal as ts
-from torch import nn
-
-from src.model.activation import identity, relu_poly
 
 
 class EncryptedDNN():

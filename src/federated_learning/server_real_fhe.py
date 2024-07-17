@@ -1,24 +1,21 @@
 import random
 from time import time
 
-import sklearn
-import tenseal as ts
-
 import numpy as np
+import tenseal as ts
 import torch
 from tqdm import tqdm
 
+from src.data.data_splitter import data_splitter
 from src.data.fake_data import RandomTriggerSet
 from src.federated_learning.aggregation import fedavg
 from src.federated_learning.client import Client
 from src.metric import accuracy
-from src.model.dnn import DNN, Detector
-from src.data.data_splitter import data_splitter
-from src.data.trigger_wafflepattern import WafflePattern
+from src.model.dnn import Detector
 from src.model.encrypted_model import EncryptedModel
 from src.model.model_choice import model_choice
 from src.plot import plot_FHE
-from src.setting import NUM_WORKERS, DEVICE, PRCT_TO_SELECT, MAX_EPOCH_CLIENT
+from src.setting import DEVICE, PRCT_TO_SELECT, MAX_EPOCH_CLIENT
 
 
 class Server_Real_FHE:

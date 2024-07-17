@@ -1,9 +1,9 @@
 from src.model.alexnet import AlexNet
-from src.model.convmixer import ConvMixer, convmixer
+from src.model.convmixer import convmixer
 from src.model.convnet import ConvNet
 from src.model.dnn import DNN
 from src.model.resnet import ResNet
-from src.model.vgg import vgg11, vgg11_bn
+from src.model.vgg import vgg11_bn
 from src.model.vgg_encrypted import init_vgg
 
 

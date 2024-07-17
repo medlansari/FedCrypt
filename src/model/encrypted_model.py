@@ -1,8 +1,8 @@
 from copy import deepcopy
 
 import numpy as np
-import torch
 import tenseal as ts
+import torch
 
 
 class EncryptedModel():
@@ -92,7 +92,7 @@ class EncryptedModel():
 
         self.target_w -= lr * self._delta_target_w + (self.target_w_org - self.target_w) * 0.05
         self.target_b -= lr * self._delta_target_b.reshape([self.target_w_shape[0]]) + (
-                    self.target_b_org - self.target_b) * 0.05
+                self.target_b_org - self.target_b) * 0.05
         self._delta_fc1_w = 0
         self._delta_fc1_b = 0
 

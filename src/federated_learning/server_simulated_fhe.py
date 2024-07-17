@@ -1,11 +1,10 @@
-import copy
 import random
 from time import time
 
 import numpy as np
 import torch
-from tqdm import tqdm
 from torch import nn, optim
+from tqdm import tqdm
 
 from src.data.data_splitter import data_splitter
 from src.data.trigger_wafflepattern import WafflePattern
@@ -14,9 +13,8 @@ from src.federated_learning.client import Client
 from src.metric import accuracy, watermark_detection_rate, one_hot_encoding
 from src.model.convmixer import Detector
 from src.model.model_choice import model_choice
+from src.plot import plot_FHE
 from src.setting import DEVICE, NUM_WORKERS, PRCT_TO_SELECT, MAX_EPOCH_CLIENT
-from src.model.freeze import bn_layers_requires_grad, embedding_mode_requies_grad
-from src.plot import plot_FHE, plot_FHE_overwriting
 
 
 class Server_Simulated_FHE():

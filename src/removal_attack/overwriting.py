@@ -1,12 +1,8 @@
-import numpy as np
 import torch
 
-from src.data.data_splitter import data_splitter
 from src.data.trigger_pgd import PGDSet
 from src.data.trigger_wafflepattern import WafflePattern
-from src.federated_learning.client import Client
 from src.federated_learning.server_simulated_fhe import Server_Simulated_FHE
-from src.model.model_choice import model_choice
 from src.model.convmixer import Detector
 from src.setting import NUM_WORKERS
 

@@ -1,12 +1,10 @@
 import numpy as np
 import torch
-from torch import nn
 import torch.nn.utils.prune as prune
-import torch.nn.functional as F
+from torch import nn
 
 from src.data.data_splitter import data_splitter
 from src.data.trigger_wafflepattern import WafflePattern
-from src.federated_learning.client import Client
 from src.federated_learning.server_simulated_fhe import Server_Simulated_FHE
 from src.metric import accuracy, watermark_detection_rate
 from src.model.vgg import Detector

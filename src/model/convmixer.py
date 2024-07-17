@@ -1,8 +1,3 @@
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import torch.utils.data
-
 import torch.nn as nn
 
 from src.model.activation import Identity, ReLU_Poly
