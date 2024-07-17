@@ -1,10 +1,12 @@
-# <span style="background-color: #D5E8D4;"> FedCrypt </span>
+<div style="text-align: center;">
+  <h1 style="background-color: #D5E8D4;">FedCrypt</h1>
+</div>
 
 This repository contains the implementation of the paper "FedCrypt: A Dynamic White-Box Watermarking Scheme for Homomorphic Federated Learning".
 
 The paper is under review to the IEEE Transactions on Dependable and Secure Computing journal.
 
-<figure>
+<figure style="text-align: center;">
   <img
   src="overview.png"
   alt="The beautiful MDN logo.">
@@ -20,33 +22,31 @@ new verification protocols for joint ownership proof between the server and clie
 ## The FedCrypt Algorithm
 
 The *FedCrypt* algorithm consists on embedding a watermark in the encrypted model from the server-side.
+To do so, It dynamically embeds a watermark by processing a set of homomorphically encrypted inputs, derived from a 
+specific trigger set, into the encrypted model and extracting corresponding features from a designated layer. 
+A deep neural network (DNN), functioning as a projection function, is then used to classify these extracted 
+features to embed the watermark. The main contribution of this work lies in modifying the projection mechanism from 
+existing dynamic DNN watermarking methods [[1]](#1) [[2]](#2) [[3]](#3) for implementation in the homomorphically encrypted domain. 
+This contribution optimizes the watermark embedding process by approximating non-polynomial functions with low-degree 
+polynomials, ensuring the non-linearity and convergence of the projection mechanism while being compatible with HE. A
+simple illustration of this process is shown in Figure 2.
 
-<div style="display: flex; align-items: center; justify-content: space-between;">
-  <div style="flex: 50%;">
-    <p>To do so, the server </p>
-  </div>
-  <div style="flex: 50%;">
-    <figure>
-      <img src="watermarking.png" alt="The beautiful MDN logo." style="width: 100%;">
-      <figcaption>Figure 2 : Illustration of the difference between the training process and the watermarking process on a 
+<figure style="text-align: center;">
+  <img src="watermarking.png" alt="The beautiful MDN logo." style="width: 75%;">
+  <figcaption>Figure 2 : Illustration of the difference between the training process and the watermarking process on a 
 four-layer neural network.</figcaption>
-    </figure>
-  </div>
-</div>
+</figure>
 
-<div style="display: flex; align-items: center; justify-content: space-between;">
-  
-  <div style="flex: 50%;">
-    <figure>
-      <img src="trigger-set_construction.png" alt="The beautiful MDN logo." style="width: 100%;">
-      <figcaption>Figure 3 : Illustration of the possible generation and corresponding verification protocols that can be 
+We introduce two new types of trigger sets for our encrypted watermark embedding process, enabling shared IP verification 
+between the server and clients. The horizontal trigger set allows independent verification by both parties, while the
+vertical trigger set requires joint verification. Both are illustrated in Figure 3.
+
+<figure style="text-align: center;">
+  <img src="trigger-set_construction.png" alt="The beautiful MDN logo." style="width: 75%;">
+  <figcaption>Figure 3 : Illustration of the possible generation and corresponding verification protocols that can be 
 performed using FedCrypt.</figcaption>
-    </figure>
-  </div>
-    <div style="flex: 50%;">
-    <p>Le texte que vous souhaitez afficher à gauche de l'image.</p>
-  </div>
-</div>
+</figure>
+
 
 ## Setup
 
@@ -141,5 +141,24 @@ following attacks :
 
 ## Citation
 
-Mohammed Lansari, Reda Bellafqira, Katarzyna Kapusta, et al. FedCrypt: A Dynamic White-Box Watermarking Scheme for Homomorphic Federated Learning. TechRxiv.
-DOI: Pending approval
+Cite as: Mohammed Lansari, Reda Bellafqira, Katarzyna Kapusta, et al. FedCrypt: A Dynamic White-Box Watermarking Scheme for Homomorphic Federated Learning. TechRxiv. July 16, 2024. DOI: 10.36227/techrxiv.172114666.63343276/v1Registration in progress
+
+## References
+<a id="1">[1]</a> 
+B. Darvish Rouhani, H. Chen, and F. Koushanfar, “Deep-
+signs: An end-to-end watermarking framework for own-
+ership protection of deep neural networks,” in Proceed-
+ings of the Twenty-Fourth International Conference on
+Architectural Support for Programming Languages and
+Operating Systems, 2019, pp. 485–497
+
+<a id="2">[2]</a>
+R. Bellafqira and G. Coatrieux, “Diction: Dynamic ro-
+bust white box watermarking scheme,” arXiv preprint
+arXiv:2210.15745, 2022.
+
+<a id="3">[3]</a>
+S. Yu, J. Hong, Y. Zeng, F. Wang, R. Jia, and
+J. Zhou, “Who leaked the model? tracking ip infringers
+in accountable federated learning,” arXiv preprint
+arXiv:2312.03205, 2023.
