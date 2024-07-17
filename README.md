@@ -140,7 +140,7 @@ following attacks :
 ## Citation
 
 Cite as: Mohammed Lansari, Reda Bellafqira, Katarzyna Kapusta, et al. FedCrypt: A Dynamic White-Box Watermarking Scheme for Homomorphic Federated Learning. TechRxiv. July 16, 2024. 
-DOI: [10.36227/techrxiv.172114666.63343276/v1](10.36227/techrxiv.172114666.63343276/v1 "DOI")
+DOI: [10.36227/techrxiv.172114666.63343276/v1](https://doi.org/10.36227/techrxiv.172114666.63343276/v1 "DOI")
 
 ## References
 <a id="1">[1]</a> 
