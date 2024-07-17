@@ -6,7 +6,7 @@ The paper is under review to the IEEE Transactions on Dependable and Secure Comp
 
 <figure style="text-align: center;">
   <img
-  src="overview.png"
+  src="images/overview.png"
   alt="The beautiful MDN logo.">
   <figcaption>Figure 1 : Overview of the FedCrypt scheme.</figcaption>
 </figure>
@@ -30,7 +30,7 @@ polynomials, ensuring the non-linearity and convergence of the projection mechan
 simple illustration of this process is shown in Figure 2.
 
 <figure style="text-align: center;">
-  <img src="watermarking.png" alt="The beautiful MDN logo." style="width: 75%;">
+  <img src="images/watermarking.png" alt="The beautiful MDN logo." style="width: 75%;">
   <figcaption>Figure 2 : Illustration of the difference between the training process and the watermarking process on a 
 four-layer neural network.</figcaption>
 </figure>
@@ -40,7 +40,7 @@ between the server and clients. The horizontal trigger set allows independent ve
 vertical trigger set requires joint verification. Both are illustrated in Figure 3.
 
 <figure style="text-align: center;">
-  <img src="trigger-set_construction.png" alt="The beautiful MDN logo." style="width: 75%;">
+  <img src="images/trigger-set_construction.png" alt="The beautiful MDN logo." style="width: 75%;">
   <figcaption>Figure 3 : Illustration of the possible generation and corresponding verification protocols that can be 
 performed using FedCrypt.</figcaption>
 </figure>
