@@ -14,8 +14,10 @@ class MyTestCase(unittest.TestCase):
         poly_mod_degree = 8192
         coeff_mod_bit_sizes = [40, 21, 21, 21, 21, 21, 21, 40]
         # create TenSEALContext
-        ctx_training = ts.context(ts.SCHEME_TYPE.CKKS, poly_mod_degree, -1, coeff_mod_bit_sizes)
-        ctx_training.global_scale = 2 ** 21
+        ctx_training = ts.context(
+            ts.SCHEME_TYPE.CKKS, poly_mod_degree, -1, coeff_mod_bit_sizes
+        )
+        ctx_training.global_scale = 2**21
         ctx_training.generate_galois_keys()
 
         x = torch.randn(32, 1)
@@ -38,8 +40,10 @@ class MyTestCase(unittest.TestCase):
         poly_mod_degree = 8192
         coeff_mod_bit_sizes = [40, 21, 21, 21, 21, 21, 21, 40]
         # create TenSEALContext
-        ctx_training = ts.context(ts.SCHEME_TYPE.CKKS, poly_mod_degree, -1, coeff_mod_bit_sizes)
-        ctx_training.global_scale = 2 ** 21
+        ctx_training = ts.context(
+            ts.SCHEME_TYPE.CKKS, poly_mod_degree, -1, coeff_mod_bit_sizes
+        )
+        ctx_training.global_scale = 2**21
         ctx_training.generate_galois_keys()
 
         x = torch.randn(32, 1)
@@ -66,7 +70,9 @@ class MyTestCase(unittest.TestCase):
         grad_fc1 = grad_fc1 + abs(grad_fc1.min())
         grad_fc1 = grad_fc1 / grad_fc1.max()
 
-        grad_fc1_enc = torch.tensor(model_enc.backward_fc1(x_enc, y_pred_enc, y_ground_enc).decrypt().tolist())
+        grad_fc1_enc = torch.tensor(
+            model_enc.backward_fc1(x_enc, y_pred_enc, y_ground_enc).decrypt().tolist()
+        )
         grad_fc1_enc = grad_fc1_enc + abs(grad_fc1_enc.min())
         grad_fc1_enc = grad_fc1_enc / grad_fc1_enc.max()
 
@@ -76,7 +82,11 @@ class MyTestCase(unittest.TestCase):
         grad_detect = grad_detect + abs(grad_detect.min())
         grad_detect = grad_detect / grad_detect.max()
 
-        grad_detect_enc = torch.tensor(model_enc.backward_detect(x_enc, y_pred_enc, y_ground_enc).decrypt().tolist())
+        grad_detect_enc = torch.tensor(
+            model_enc.backward_detect(x_enc, y_pred_enc, y_ground_enc)
+            .decrypt()
+            .tolist()
+        )
         grad_detect_enc = grad_detect_enc + abs(grad_detect_enc.min())
         grad_detect_enc = grad_detect_enc / grad_detect_enc.max()
 
@@ -86,5 +96,5 @@ class MyTestCase(unittest.TestCase):
         self.assertLess(diff_detect, 0.2)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

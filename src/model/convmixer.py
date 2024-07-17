@@ -23,18 +23,25 @@ class ConvMixer(nn.Module):
 
         self.conv1 = nn.Conv2d(3, dim, kernel_size=patch_size, stride=patch_size)
         self.bn1 = nn.BatchNorm2d(dim)
-        self.residual_blocks = nn.ModuleList([
-            nn.Sequential(
-                Residual(nn.Sequential(
-                    nn.Conv2d(dim, dim, kernel_size, groups=dim, padding="same"),
+        self.residual_blocks = nn.ModuleList(
+            [
+                nn.Sequential(
+                    Residual(
+                        nn.Sequential(
+                            nn.Conv2d(
+                                dim, dim, kernel_size, groups=dim, padding="same"
+                            ),
+                            self.activation,
+                            nn.BatchNorm2d(dim),
+                        )
+                    ),
+                    nn.Conv2d(dim, dim, kernel_size=1),
                     self.activation,
-                    nn.BatchNorm2d(dim)
-                )),
-                nn.Conv2d(dim, dim, kernel_size=1),
-                self.activation,
-                nn.BatchNorm2d(dim)
-            ) for _ in range(depth)
-        ])
+                    nn.BatchNorm2d(dim),
+                )
+                for _ in range(depth)
+            ]
+        )
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
         self.flatten = nn.Flatten()
         self.classifier = nn.Sequential(

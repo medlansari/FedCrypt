@@ -38,4 +38,11 @@ def overwriting_attack(model_name, input_size, num_classes_task, max_epoch, lr, 
         Server.model.load_state_dict(torch.load(path + "/save_" + id + ".pth"))
         Server.model_linear.load_state_dict(torch.load(path + "/save_" + id + ".pth"))
 
-        Server.train_overwriting(original_watermark_set, original_detector, max_epoch, 1e-3, (1e-2, 1e-1), (1e-2, 1e-1))
+        Server.train_overwriting(
+            original_watermark_set,
+            original_detector,
+            max_epoch,
+            1e-3,
+            (1e-2, 1e-1),
+            (1e-2, 1e-1),
+        )

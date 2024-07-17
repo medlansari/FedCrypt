@@ -33,7 +33,7 @@ def pruning(model, percentage_to_remove) -> None:
 
     for layer in get_children(model):
         if isinstance(layer, nn.Conv2d) or isinstance(layer, nn.Linear):
-            parameters_to_prune.append((layer, 'weight'))
+            parameters_to_prune.append((layer, "weight"))
 
     prune.global_unstructured(
         parameters_to_prune,
@@ -43,7 +43,7 @@ def pruning(model, percentage_to_remove) -> None:
 
     for layer in get_children(model):
         if isinstance(layer, nn.Conv2d) or isinstance(layer, nn.Linear):
-            prune.remove(layer, 'weight')
+            prune.remove(layer, "weight")
 
 
 def pruning_attack(ids: list[str]) -> None:
@@ -78,7 +78,9 @@ def pruning_attack(ids: list[str]) -> None:
             detector.to("cuda")
 
             test_tmp = accuracy(Server.model, test_set)[0]
-            dynamic_tmp, loss = watermark_detection_rate(Server.model_linear, detector, trigger_set)
+            dynamic_tmp, loss = watermark_detection_rate(
+                Server.model_linear, detector, trigger_set
+            )
 
             test_accuracy.append(test_tmp)
             wdr_dynamic.append(dynamic_tmp)

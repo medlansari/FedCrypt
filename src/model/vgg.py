@@ -3,17 +3,24 @@ import math
 import torch.nn as nn
 
 __all__ = [
-    'VGG', 'vgg11', 'vgg11_bn', 'vgg13', 'vgg13_bn', 'vgg16', 'vgg16_bn',
-    'vgg19_bn', 'vgg19',
+    "VGG",
+    "vgg11",
+    "vgg11_bn",
+    "vgg13",
+    "vgg13_bn",
+    "vgg16",
+    "vgg16_bn",
+    "vgg19_bn",
+    "vgg19",
 ]
 
 from src.model.activation import ReLU_Poly, Identity
 
 
 class VGG(nn.Module):
-    '''
-    VGG model 
-    '''
+    """
+    VGG model
+    """
 
     def __init__(self, features, linear):
         super(VGG, self).__init__()
@@ -28,7 +35,7 @@ class VGG(nn.Module):
                 Identity(),
                 nn.Linear(512, 512),
                 # nn.BatchNorm1d(512),
-                Identity()
+                Identity(),
             )
 
             self.trainable()
@@ -42,14 +49,14 @@ class VGG(nn.Module):
                 nn.Dropout(),
                 nn.Linear(512, 512),
                 # nn.BatchNorm1d(512),
-                nn.ReLU(True)
+                nn.ReLU(True),
             )
         self.last_layer = nn.Linear(512, 10)
         # Initialize weights
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
                 n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
-                m.weight.data.normal_(0, math.sqrt(2. / n))
+                m.weight.data.normal_(0, math.sqrt(2.0 / n))
                 m.bias.data.zero_()
 
     def forward(self, x):
@@ -74,7 +81,7 @@ def make_layers(cfg, batch_norm=False):
     layers = []
     in_channels = 3
     for v in cfg:
-        if v == 'M':
+        if v == "M":
             layers += [nn.MaxPool2d(kernel_size=2, stride=2)]
         else:
             conv2d = nn.Conv2d(in_channels, v, kernel_size=3, padding=1)
@@ -90,7 +97,7 @@ def make_layers_linear(cfg, batch_norm=False):
     layers = []
     in_channels = 3
     for v in cfg:
-        if v == 'M':
+        if v == "M":
             layers += [nn.AvgPool2d(kernel_size=2, stride=2)]
         else:
             conv2d = nn.Conv2d(in_channels, v, kernel_size=3, padding=1)
@@ -103,28 +110,68 @@ def make_layers_linear(cfg, batch_norm=False):
 
 
 cfg = {
-    'A': [64, 'M', 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'],
-    'B': [64, 64, 'M', 128, 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'],
-    'D': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'M', 512, 512, 512, 'M', 512, 512, 512, 'M'],
-    'E': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 256, 'M', 512, 512, 512, 512, 'M',
-          512, 512, 512, 512, 'M'],
+    "A": [64, "M", 128, "M", 256, 256, "M", 512, 512, "M", 512, 512, "M"],
+    "B": [64, 64, "M", 128, 128, "M", 256, 256, "M", 512, 512, "M", 512, 512, "M"],
+    "D": [
+        64,
+        64,
+        "M",
+        128,
+        128,
+        "M",
+        256,
+        256,
+        256,
+        "M",
+        512,
+        512,
+        512,
+        "M",
+        512,
+        512,
+        512,
+        "M",
+    ],
+    "E": [
+        64,
+        64,
+        "M",
+        128,
+        128,
+        "M",
+        256,
+        256,
+        256,
+        256,
+        "M",
+        512,
+        512,
+        512,
+        512,
+        "M",
+        512,
+        512,
+        512,
+        512,
+        "M",
+    ],
 }
 
 
 def vgg11(linear=False):
     """VGG 11-layer model (configuration "A")"""
     if linear:
-        return VGG(make_layers_linear(cfg['A']), linear)
+        return VGG(make_layers_linear(cfg["A"]), linear)
     else:
-        return VGG(make_layers(cfg['A']), linear)
+        return VGG(make_layers(cfg["A"]), linear)
 
 
 def vgg11_bn(linear=False):
     """VGG 11-layer model (configuration "A") with batch normalization"""
     if linear:
-        return VGG(make_layers_linear(cfg['A'], batch_norm=True), linear)
+        return VGG(make_layers_linear(cfg["A"], batch_norm=True), linear)
     else:
-        return VGG(make_layers(cfg['A'], batch_norm=True), linear)
+        return VGG(make_layers(cfg["A"], batch_norm=True), linear)
 
 
 class Detector(nn.Module):

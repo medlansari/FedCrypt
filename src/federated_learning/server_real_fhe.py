@@ -27,10 +27,14 @@ class Server_Real_FHE:
         self.num_classes_watermarking = 2
         self.input_size = 32 * 32
 
-        self.model = model_choice(self.model_name, self.input_size, self.num_classes_task)[0]
+        self.model = model_choice(
+            self.model_name, self.input_size, self.num_classes_task
+        )[0]
         self.model.to(DEVICE)
 
-        self.train_subsets, self.subset_size, self.test_set = data_splitter(self.dataset, self.nb_clients)
+        self.train_subsets, self.subset_size, self.test_set = data_splitter(
+            self.dataset, self.nb_clients
+        )
         self.detector = Detector(self.num_classes_watermarking)
         self.detector.to(DEVICE)
 
@@ -42,18 +46,27 @@ class Server_Real_FHE:
         # self.ctx_training = ts.context(ts.SCHEME_TYPE.CKKS, poly_mod_degree, -1, coeff_mod_bit_sizes)
         # self.ctx_training.global_scale = 2 ** 21
         # create TenSEALContext
-        self.ctx_training = ts.context(ts.SCHEME_TYPE.CKKS, 16384,
-                                       coeff_mod_bit_sizes=[60, 40, 40, 40, 40, 40, 40, 40, 40, 40])  #
+        self.ctx_training = ts.context(
+            ts.SCHEME_TYPE.CKKS,
+            16384,
+            coeff_mod_bit_sizes=[60, 40, 40, 40, 40, 40, 40, 40, 40, 40],
+        )  #
         self.ctx_training.global_scale = pow(2, 40)  # 2 ** 21
         self.ctx_training.generate_galois_keys()
 
-        self.trigger_set = RandomTriggerSet(self.ctx_training, 10, 64, self.num_classes_watermarking)
-        self.model_encrypted = EncryptedModel(self.model, Detector(self.num_classes_watermarking), 2, self.ctx_training)
+        self.trigger_set = RandomTriggerSet(
+            self.ctx_training, 10, 64, self.num_classes_watermarking
+        )
+        self.model_encrypted = EncryptedModel(
+            self.model, Detector(self.num_classes_watermarking), 2, self.ctx_training
+        )
 
         print("Dataset :", dataset)
         print("Number of clients :", self.nb_clients)
 
-    def train(self, nb_rounds: int, lr_client: float, epoch_pretrain: int, epoch_retrain: int) -> None:
+    def train(
+        self, nb_rounds: int, lr_client: float, epoch_pretrain: int, epoch_retrain: int
+    ) -> None:
         print("#" * 60 + " Dynamic Watermarking for Encrypted Model " + "#" * 60)
 
         acc_test_list = []
@@ -66,8 +79,13 @@ class Server_Real_FHE:
         clients = []
 
         for c in range(self.nb_clients):
-            client = Client(self.model_name, self.model.state_dict(),
-                            self.input_size, self.num_classes_task, self.train_subsets[c])
+            client = Client(
+                self.model_name,
+                self.model.state_dict(),
+                self.input_size,
+                self.num_classes_task,
+                self.train_subsets[c],
+            )
 
             clients.append(client)
 
@@ -116,7 +134,8 @@ class Server_Real_FHE:
             + "_"
             + str(MAX_EPOCH_CLIENT)
             + "_FHE"
-            + "_" + self.id
+            + "_"
+            + self.id
             + ".pth",
         )
 
@@ -127,7 +146,8 @@ class Server_Real_FHE:
             + "_"
             + str(MAX_EPOCH_CLIENT)
             + "_FHE"
-            + "_" + self.id
+            + "_"
+            + self.id
             + ".pth",
         )
 
@@ -136,13 +156,21 @@ class Server_Real_FHE:
         # self.model_encrypted.target_w = self.model.fc2.weight.data.detach().cpu().tolist()
         # self.model_encrypted.target_b = self.model.fc2.bias.data.detach().cpu().tolist()
 
-        self.model_encrypted.target_w = self.model.classifier[-1][2].weight.data.detach().cpu().tolist()
-        self.model_encrypted.target_b = self.model.classifier[-1][2].bias.data.detach().cpu().tolist()
+        self.model_encrypted.target_w = (
+            self.model.classifier[-1][2].weight.data.detach().cpu().tolist()
+        )
+        self.model_encrypted.target_b = (
+            self.model.classifier[-1][2].bias.data.detach().cpu().tolist()
+        )
 
-        self.model_encrypted.dA_w = self.detector.fc1.weight.data.detach().cpu().tolist()
+        self.model_encrypted.dA_w = (
+            self.detector.fc1.weight.data.detach().cpu().tolist()
+        )
         self.model_encrypted.dA_b = self.detector.fc1.bias.data.detach().cpu().tolist()
 
-        self.model_encrypted.dB_w = self.detector.fc2.weight.data.detach().cpu().tolist()
+        self.model_encrypted.dB_w = (
+            self.detector.fc2.weight.data.detach().cpu().tolist()
+        )
         self.model_encrypted.dB_b = self.detector.fc2.bias.data.detach().cpu().tolist()
 
     def tenseal_to_torch(self):
@@ -152,18 +180,24 @@ class Server_Real_FHE:
         #     torch.tensor(self.model_encrypted.target_b, device=DEVICE))
 
         self.model.classifier[-1][2].weight = torch.nn.parameter.Parameter(
-            torch.tensor(self.model_encrypted.target_w, device=DEVICE))
+            torch.tensor(self.model_encrypted.target_w, device=DEVICE)
+        )
         self.model.classifier[-1][2].bias = torch.nn.parameter.Parameter(
-            torch.tensor(self.model_encrypted.target_b, device=DEVICE))
+            torch.tensor(self.model_encrypted.target_b, device=DEVICE)
+        )
 
         self.detector.fc1.weight = torch.nn.parameter.Parameter(
-            torch.tensor(self.model_encrypted.dA_w, device=DEVICE))
+            torch.tensor(self.model_encrypted.dA_w, device=DEVICE)
+        )
         self.detector.fc1.bias = torch.nn.parameter.Parameter(
-            torch.tensor(self.model_encrypted.dA_b, device=DEVICE))
+            torch.tensor(self.model_encrypted.dA_b, device=DEVICE)
+        )
         self.detector.fc2.weight = torch.nn.parameter.Parameter(
-            torch.tensor(self.model_encrypted.dB_w, device=DEVICE))
+            torch.tensor(self.model_encrypted.dB_w, device=DEVICE)
+        )
         self.detector.fc2.bias = torch.nn.parameter.Parameter(
-            torch.tensor(self.model_encrypted.dB_b, device=DEVICE))
+            torch.tensor(self.model_encrypted.dB_b, device=DEVICE)
+        )
 
     def encrypted_pre_embedding(self, max_round):
 
@@ -199,11 +233,15 @@ class Server_Real_FHE:
                 self.model_encrypted.backward(data_encrypted, y_pred, label_encrypted)
 
                 y_pred = self.model_encrypted.to_tensor(y_pred).reshape(-1, 1)
-                label_encrypted = self.model_encrypted.to_tensor(label_encrypted).reshape(-1, 1)
+                label_encrypted = self.model_encrypted.to_tensor(
+                    label_encrypted
+                ).reshape(-1, 1)
 
                 # print(y_pred.flatten(), label_encrypted.argmax().item())
 
-                accuracy += int(y_pred.argmax().item() == label_encrypted.argmax().item())
+                accuracy += int(
+                    y_pred.argmax().item() == label_encrypted.argmax().item()
+                )
 
                 loss += criterion(y_pred, label_encrypted)
 
@@ -262,11 +300,15 @@ class Server_Real_FHE:
                 self.model_encrypted.backward(data_encrypted, y_pred, label_encrypted)
 
                 y_pred = self.model_encrypted.to_tensor(y_pred).reshape(-1, 1)
-                label_encrypted = self.model_encrypted.to_tensor(label_encrypted).reshape(-1, 1)
+                label_encrypted = self.model_encrypted.to_tensor(
+                    label_encrypted
+                ).reshape(-1, 1)
 
                 # print(y_pred.flatten(), label_encrypted.argmax().item())
 
-                accuracy += int(y_pred.argmax().item() == label_encrypted.argmax().item())
+                accuracy += int(
+                    y_pred.argmax().item() == label_encrypted.argmax().item()
+                )
 
                 loss += criterion(y_pred, label_encrypted)
 

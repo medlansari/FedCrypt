@@ -36,24 +36,26 @@ TRANSFORM_TEST = transforms.Compose(
     ]
 )
 
-TRANSFORM_TRAIN_MNIST = transforms.Compose([
-    transforms.Resize((28, 28)),
-    transforms.ToTensor(),
-    transforms.Normalize((0.1307,), (0.3081,))
-])
+TRANSFORM_TRAIN_MNIST = transforms.Compose(
+    [
+        transforms.Resize((28, 28)),
+        transforms.ToTensor(),
+        transforms.Normalize((0.1307,), (0.3081,)),
+    ]
+)
 
-TRANSFORM_TEST_MNIST = transforms.Compose([
-    transforms.Resize((28, 28)),
-    transforms.ToTensor(),
-    transforms.Normalize((0.1307,), (0.3081,))
-])
+TRANSFORM_TEST_MNIST = transforms.Compose(
+    [
+        transforms.Resize((28, 28)),
+        transforms.ToTensor(),
+        transforms.Normalize((0.1307,), (0.3081,)),
+    ]
+)
 
-TRANSFORM_TRAIN_MNIST2 = transforms.Compose([
-    transforms.ToTensor(),
-    transforms.Normalize((0.1307,), (0.3081,))
-])
+TRANSFORM_TRAIN_MNIST2 = transforms.Compose(
+    [transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))]
+)
 
-TRANSFORM_TEST_MNIST2 = transforms.Compose([
-    transforms.ToTensor(),
-    transforms.Normalize((0.1307,), (0.3081,))
-])
+TRANSFORM_TEST_MNIST2 = transforms.Compose(
+    [transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))]
+)

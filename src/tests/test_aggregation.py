@@ -44,9 +44,7 @@ class MyTestCase(unittest.TestCase):
         model = ConvNet(False).to(DEVICE)
         set_model_params_to_value(model, 58.0)
 
-        selected_clients = random.sample(
-            range(2), int(1.0 * 2)
-        )
+        selected_clients = random.sample(range(2), int(1.0 * 2))
 
         fedavg(clients, model, subset_size, selected_clients)
 
@@ -82,9 +80,7 @@ class MyTestCase(unittest.TestCase):
         model = ConvNet(False).to(DEVICE)
         set_model_params_to_value(model, 88.0)
 
-        selected_clients = random.sample(
-            range(5), int(1.0 * 5)
-        )
+        selected_clients = random.sample(range(5), int(1.0 * 5))
 
         fedavg(clients, model, subset_size, selected_clients)
 
@@ -93,5 +89,5 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(True, all_close)  # add assertion here
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

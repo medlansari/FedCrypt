@@ -4,8 +4,12 @@ from torch import nn
 from src.federated_learning.client import Client
 
 
-def fedavg(clients: list[Client], server_model: nn.Module,
-           subset_size: list[int], selected_clients: list[int]) -> None:
+def fedavg(
+    clients: list[Client],
+    server_model: nn.Module,
+    subset_size: list[int],
+    selected_clients: list[int],
+) -> None:
     """
     Performs the aggregation of the weights of the selected clients' models using the FedAvg algorithm.
 
@@ -31,13 +35,13 @@ def fedavg(clients: list[Client], server_model: nn.Module,
             for idx, client in enumerate(clients):
                 if client.model.state_dict()[name_server].dtype is torch.long:
                     weight = (
-                                     subset_size[idx] / subset_size_sum
-                             ) * client.model.state_dict()[name_server].clone().detach()
+                        subset_size[idx] / subset_size_sum
+                    ) * client.model.state_dict()[name_server].clone().detach()
                     weight = weight.long()
 
                 else:
                     weight = (
-                                     subset_size[idx] / subset_size_sum
-                             ) * client.model.state_dict()[name_server].clone().detach()
+                        subset_size[idx] / subset_size_sum
+                    ) * client.model.state_dict()[name_server].clone().detach()
 
                 server_dict[name_server].add_(weight)

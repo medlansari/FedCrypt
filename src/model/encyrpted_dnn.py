@@ -5,7 +5,7 @@ import torch
 import tenseal as ts
 
 
-class EncryptedDNN():
+class EncryptedDNN:
 
     def __init__(self, torch_dnn, torch_detector, number_class, context_training):
         self.fc1_weight_shape = torch_dnn.fc1.weight.data.shape
@@ -101,7 +101,9 @@ class EncryptedDNN():
         lr = 1e-2
 
         self.detect_weight -= lr * self._delta_detect_w
-        self.detect_bias -= lr * self._delta_detect_b.reshape([self.detect_weight_shape[0]])
+        self.detect_bias -= lr * self._delta_detect_b.reshape(
+            [self.detect_weight_shape[0]]
+        )
         self._delta_detect_w = 0
         self._delta_detect_b = 0
 

@@ -22,17 +22,19 @@ def fine_tuning_attack(model_name, input_size, num_classes_task, max_epoch, lr, 
     )
 
     for i in range(5):
-        client_malicious = Client(model_name, torch.load(path + "/save_" + id + ".pth"), input_size, num_classes_task,
-                                  train_subsets[0])
+        client_malicious = Client(
+            model_name,
+            torch.load(path + "/save_" + id + ".pth"),
+            input_size,
+            num_classes_task,
+            train_subsets[0],
+        )
         detector = Detector(num_classes_task)
         detector.load_state_dict(torch.load(path + "/detector_" + id + ".pth"))
         detector.to("cuda")
 
-        test_accuracy, wdr_dynamic = client_malicious.train_fine_tuning(lr, max_epoch, test_set, trigger_set, detector)
-
-        np.savez(
-            path
-            + "fine-tuning" + id + str(i),
-            test_accuracy,
-            wdr_dynamic
+        test_accuracy, wdr_dynamic = client_malicious.train_fine_tuning(
+            lr, max_epoch, test_set, trigger_set, detector
         )
+
+        np.savez(path + "fine-tuning" + id + str(i), test_accuracy, wdr_dynamic)

@@ -5,7 +5,7 @@ import tenseal as ts
 import torch
 
 
-class EncryptedModel():
+class EncryptedModel:
 
     def __init__(self, torch_dnn, torch_detector, number_class, context_training):
 
@@ -90,9 +90,13 @@ class EncryptedModel():
 
         lr = 1e-3
 
-        self.target_w -= lr * self._delta_target_w + (self.target_w_org - self.target_w) * 0.05
-        self.target_b -= lr * self._delta_target_b.reshape([self.target_w_shape[0]]) + (
-                self.target_b_org - self.target_b) * 0.05
+        self.target_w -= (
+            lr * self._delta_target_w + (self.target_w_org - self.target_w) * 0.05
+        )
+        self.target_b -= (
+            lr * self._delta_target_b.reshape([self.target_w_shape[0]])
+            + (self.target_b_org - self.target_b) * 0.05
+        )
         self._delta_fc1_w = 0
         self._delta_fc1_b = 0
 
@@ -125,7 +129,9 @@ class EncryptedModel():
         lr = 1e-3
 
         self.target_w -= lr * (self._delta_target_w + self.target_w * 0.1)
-        self.target_b -= lr * (self._delta_target_b.reshape([self.target_w_shape[0]]) + self.target_b * 0.1)
+        self.target_b -= lr * (
+            self._delta_target_b.reshape([self.target_w_shape[0]]) + self.target_b * 0.1
+        )
         self._delta_fc1_w = 0
         self._delta_fc1_b = 0
 
