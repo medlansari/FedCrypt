@@ -1,0 +1,13 @@
+model: "ResNet"
+dataset: "CIFAR10"
+
+fl:
+  max_round: 80
+  nb_clients: 10
+  lr_clients: 1e-3
+
+watermarking:
+  max_epochs:
+  lr_pretrain: [1e-2, 1e-1]
+  lr_retrain: [1e-2, 1e-1]
+

@@ -42,8 +42,6 @@ class RandomTriggerSet(Dataset):
             n_samples=num_samples,
         )
 
-        print(self.labels)
-
         self.data = (self.data - np.mean(self.data)) / np.std(self.data)
         self.labels = np.eye(num_classes)[self.labels]
 

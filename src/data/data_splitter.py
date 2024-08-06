@@ -163,7 +163,7 @@ def data_splitter(
             )
         )
 
-    print("Size of the train set for each client :", subsets_size, "\n")
+    print("Size of the train set for each client :", subsets_size)
 
     print("Size of the test set :", len(test_set), "\n")
 

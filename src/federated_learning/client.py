@@ -3,7 +3,7 @@ from torch import optim, nn
 
 from src.metric import accuracy, watermark_detection_rate, one_hot_encoding
 from src.model.model_choice import model_choice
-from src.setting import DEVICE, LEARNING_RATE_CLIENT, MAX_EPOCH_CLIENT
+from src.setting import DEVICE, MAX_EPOCH_CLIENT
 
 
 class Client:
@@ -28,7 +28,7 @@ class Client:
         num_classes,
         train_set: torch.utils.data.DataLoader,
     ):
-        self.model, self.model_linear = model_choice(model, input_size, num_classes)
+        self.model, self.model_linear, _ = model_choice(model, input_size, num_classes, 1)
         self.model.load_state_dict(weights)
         self.model_linear.load_state_dict(weights)
         self.model.to(DEVICE)
@@ -36,7 +36,7 @@ class Client:
         self.train_set = train_set
 
     def train(
-        self, lr: float = LEARNING_RATE_CLIENT, max_epoch: int = MAX_EPOCH_CLIENT
+        self, lr: float = 0.01, max_epoch: int = MAX_EPOCH_CLIENT
     ) -> tuple[list[float], list[float]]:
 
         optimizer = optim.SGD(self.model.parameters(), lr=lr)
@@ -72,7 +72,7 @@ class Client:
 
     def train_fine_tuning(
         self,
-        lr: float = LEARNING_RATE_CLIENT,
+        lr: float = 0.01,
         max_epoch: int = MAX_EPOCH_CLIENT,
         test_loader: torch.utils.data.DataLoader = None,
         trigger_loader: torch.utils.data.DataLoader = None,
@@ -149,7 +149,7 @@ class Client:
 
     def train_overwriting(
         self,
-        lr: float = LEARNING_RATE_CLIENT,
+        lr: float = 0.01,
         max_epoch: int = MAX_EPOCH_CLIENT,
         test_loader: torch.utils.data.DataLoader = None,
         trigger_loader: torch.utils.data.DataLoader = None,

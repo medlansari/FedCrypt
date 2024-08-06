@@ -1,32 +1,35 @@
 from time import time
+import argparse
+import yaml
 
 from src.federated_learning.server_real_fhe import Server_Real_FHE
 from src.federated_learning.server_simulated_fhe import Server_Simulated_FHE
-from src.setting import MAX_ROUNDS, NB_CLIENTS
 
 def main():
-    time_save = str(time())
-    # lr_pretrain = [(1e-3,1e-2),(1e-4,1e-2),(1e-2,1e-2)]
-    # lr_retrain = [(1e-3,1e-2),(1e-4,1e-2),(1e-2,1e-2)]
-    # for lr_p in lr_pretrain:
-    #     for lr_r in lr_retrain:
-    #for i in range(5):
+    parser = argparse.ArgumentParser()
 
-    #    time_save = str(time())
-    #    server = Server_Simulated_FHE("ResNet", "CIFAR10", NB_CLIENTS, id=time_save)
-    #    server.train(MAX_ROUNDS, 1e-3, (1e-2, 1e-1), (1e-2, 1e-1))
+    parser.add_argument('--encrypted', action='store_true', help="Use encrypted model")
+    parser.add_argument('--plaintext', dest='encrypt', action='store_false',  help="Use plaintext model")
+    parser.set_defaults(encrypt=True)
+    parser.add_argument("--cfgFl", type=str, default="", help="Config. file path for the FL settings")
+    parser.add_argument("--cfgFhe", type=str, default="", required=False, help="Config. file path for the FHE scheme")
 
-    #    time_save = str(time())
-    #    server = Server_Simulated_FHE("ConvMixer", "CIFAR10", NB_CLIENTS, id=time_save)
-    #    server.train(MAX_ROUNDS, 1e-2, (1e-2, 1e-1), (1e-2, 1e-1))
-    # time_save = str(time())
-    # server = Server_Simulated_FHE("VGG", "CIFAR10", NB_CLIENTS, id=time_save)
-    # server.train(MAX_ROUNDS, 1e-2, (1e-3,1e-2), (1e-3,1e-2))
-    for i in range(5):
-        time_save = str(time())
-        server = Server_Real_FHE("VGG_encrypted", "CIFAR10", NB_CLIENTS, id=time_save)
-        # server.train(MAX_ROUNDS, 1e-2, 5, 3)
-        server.train(MAX_ROUNDS, 1e-2, 1, 1)
+    args = parser.parse_args()
+
+    configFl = yaml.safe_load(open(args.cfgFl, 'r'))
+
+    id = str(time())
+
+    if args.encrypted:
+        print("----> Dynamic Watermarking using Real FHE <----\n")
+        configFhe = yaml.safe_load(open(args.cfgFhe, 'r'))
+        server = Server_Real_FHE(configFl["model"], configFl["dataset"], configFl["fl"]["nb_clients"], configFhe, id)
+        server.train(configFl["fl"]["max_round"], configFl["fl"]["lr_clients"], configFl["watermarking"]["max_ep_pretrain"], configFl["watermarking"]["max_ep_retrain"])
+
+    else:
+        print("----> Dynamic Watermarking using Simulated FHE <----\n")
+        server = Server_Simulated_FHE(configFl["model"], configFl["dataset"], configFl["fl"]["nb_clients"], id)
+        server.train(configFl["fl"]["max_round"], float(configFl["fl"]["lr_clients"]), tuple(map(float,configFl["watermarking"]["lr_pretrain"])), tuple(map(float,configFl["watermarking"]["lr_retrain"])))
 
 
 if __name__ == "__main__":

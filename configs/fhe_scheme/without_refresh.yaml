@@ -1,0 +1,3 @@
+poly_mod_degree : 16384
+coeff_mod_bit_sizes : [60, 40, 40, 40, 40, 40, 40, 40, 40, 40]
+global_scale : 1099511627776 # 2^40

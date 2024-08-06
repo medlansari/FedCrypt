@@ -19,7 +19,10 @@ from src.setting import DEVICE, PRCT_TO_SELECT, MAX_EPOCH_CLIENT
 
 
 class Server_Real_FHE:
-    def __init__(self, model: str, dataset: str, nb_clients: int, id: str):
+    def __init__(self, model: str, dataset: str, nb_clients: int, fhe_scheme: dict , id: str):
+        print("#---# Server Initialisation #---#")
+        print("#---#")
+
         self.model_name = model
         self.dataset = dataset
         self.nb_clients = nb_clients
@@ -40,18 +43,12 @@ class Server_Real_FHE:
 
         self.id = id
 
-        # parameters
-        # poly_mod_degree = 8192
-        # coeff_mod_bit_sizes = [40, 21, 21, 21, 21, 21, 21, 40]
-        # self.ctx_training = ts.context(ts.SCHEME_TYPE.CKKS, poly_mod_degree, -1, coeff_mod_bit_sizes)
-        # self.ctx_training.global_scale = 2 ** 21
-        # create TenSEALContext
         self.ctx_training = ts.context(
             ts.SCHEME_TYPE.CKKS,
-            16384,
-            coeff_mod_bit_sizes=[60, 40, 40, 40, 40, 40, 40, 40, 40, 40],
+            fhe_scheme["poly_mod_degree"],
+            coeff_mod_bit_sizes=fhe_scheme["coeff_mod_bit_sizes"],
         )  #
-        self.ctx_training.global_scale = pow(2, 40)  # 2 ** 21
+        self.ctx_training.global_scale = fhe_scheme["global_scale"]
         self.ctx_training.generate_galois_keys()
 
         self.trigger_set = RandomTriggerSet(
@@ -61,13 +58,17 @@ class Server_Real_FHE:
             self.model, Detector(self.num_classes_watermarking), 2, self.ctx_training
         )
 
-        print("Dataset :", dataset)
-        print("Number of clients :", self.nb_clients)
+        print("Number of clients :", self.nb_clients, "\n")
+
+        print("#---#")
+        print("#---# Server Initialisation Done #---#\n")
 
     def train(
         self, nb_rounds: int, lr_client: float, epoch_pretrain: int, epoch_retrain: int
     ) -> None:
-        print("#" * 60 + " Dynamic Watermarking for Encrypted Model " + "#" * 60)
+
+        print("#---# Training #---#")
+        print("#---#")
 
         acc_test_list = []
         acc_watermark_black_list = []
@@ -150,6 +151,9 @@ class Server_Real_FHE:
             + self.id
             + ".pth",
         )
+
+        print("#---#")
+        print("#---# Training Done #---#\n")
 
     def torch_to_tenseal(self):
 

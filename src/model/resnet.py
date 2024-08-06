@@ -1,7 +1,7 @@
 import torch.nn as nn
 import torch.nn.functional as F
 
-from src.model.activation import Identity
+from src.model.activation import Identity, ReLU_Poly
 
 
 class ResidualBlock(nn.Module):
@@ -97,3 +97,18 @@ class ResNet(nn.Module):
         # Décongeler les paramètres de la dernière couche
         for param in self.classifier.parameters():
             param.requires_grad = True
+
+class resnet_detector(nn.Module):
+
+    def __init__(self, n_classes):
+        super().__init__()
+        self.fc1 = nn.Linear(128, 64)
+        self.fc2 = nn.Linear(64, n_classes)
+
+        self.activation = ReLU_Poly()
+
+    def forward(self, x):
+        x = (x - x.mean(dim=0)) / x.std(dim=0)
+        z1 = self.fc1(x)
+        z2 = self.activation(z1)
+        return self.fc2(z2)

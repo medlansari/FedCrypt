@@ -4,13 +4,10 @@ from torchvision import transforms
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 NUM_WORKERS = 4  # Number of workers for the dataloader
 MAX_EPOCH_CLIENT = 5  # Number of epochs for each client
-NB_CLIENTS = 10  # Number of clients
 PRCT_TO_SELECT = 0.5  # Percentage of clients selected for each round
-LEARNING_RATE_CLIENT = 1e-2  # Learning rate for the client
 BATCH_SIZE_CLIENT = 32  # Batch size for the client
 BATCH_SIZE_TRIGGER = 2  # Batch size for the trigger
 BATCH_SIZE_SERVER = 20  # Batch size for the server
-MAX_ROUNDS = 80  # Number of rounds
 TYPE = torch.float32  # Type of the tensor
 
 TRANSFORM_TRAIN = transforms.Compose(

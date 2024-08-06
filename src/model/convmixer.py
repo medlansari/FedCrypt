@@ -85,7 +85,7 @@ def convmixer(linear=False):
         return ConvMixer(256, 8, False, 5, 2, 10)
 
 
-class Detector(nn.Module):
+class convmixer_detector(nn.Module):
 
     def __init__(self, n_classes):
         super().__init__()
