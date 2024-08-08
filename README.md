@@ -4,6 +4,8 @@ This repository contains the implementation of the paper "FedCrypt: A Dynamic Wh
 
 The paper is under review to the IEEE Transactions on Dependable and Secure Computing journal.
 
+The paper can be found in a preprint version [here](https://www.techrxiv.org/users/796552/articles/1183818-fedcrypt-a-dynamic-white-box-watermarking-scheme-for-homomorphic-federated-learning).
+
 <figure style="text-align: center;">
   <img
   src="images/overview.png"
@@ -13,7 +15,7 @@ The paper is under review to the IEEE Transactions on Dependable and Secure Comp
 
 ## Introduction
 
-*FedCrypt* the first dynamic white-box watermarking technique compatible with HE in FL. FedCrypt involves training a 
+*FedCrypt* is the first dynamic white-box watermarking technique compatible with HE in FL. FedCrypt involves training a 
 projection function on the activations of the encrypted model using a trigger set, preserving client privacy and enabling 
 new verification protocols for joint ownership proof between the server and clients without disclosing private information. 
 
@@ -62,6 +64,13 @@ performed using FedCrypt.</figcaption>
 
 ### Installation
 
+Clone the repository :
+
+```bash
+git clone https://github.com/medlansari/FedCrypt
+cd FedCrypt
+```
+
 Create a virtual environment and run activate it :
 
 ```bash
@@ -77,50 +86,44 @@ pip install -r requirements.txt
 
 ## Training
 
-The FL training can be performed using the following command :
+The FL training can be performed using the ```main.py``` file. The user can choose to perform the watermark embedding using the
+plaintext or the encrypted model using the flag ```--plaintext``` or ```--encrypted```, respectively. It can also choose
+the configuration of the Federated Learning (model, dataset, homomorphic encryption scheme etc.) using the flags ```--cfgFl```
+and ```--cfgFhe```.
 
-```bash
-python main.py
-```
-
-Where ```main.py``` contains the configuration about the training process.
-
-The user can choose between the class ```Server_Real_FHE``` and ```Server_Simulated_FHE``` to perform the training
-using the real or simulated FHE, respectively.
-
-For each experiment the user can create an instance of the class ```Server_*_FHE``` as follows :
-
-```python
-server = Server_*_FHE(model, dataset, nb_clients)
-```
-
-Where :
-
-- ```model``` is the model to be trained among those which are listed in the ```./src/model/model_choice.py``` file. 
-- ```dataset``` is the dataset to be used among those which are listed in the ```./src/dataset/data_splitter.py``` file.
-- ```nb_clients``` is the number of clients to be used in the FL process.
-
-Then the FL training can be performed using the following line :
-
-```python
-server.train(max_rounds, lr_client, lr_pretrain, lr_retrain)
-```
-
-Where :
-- ```max_rounds``` is the number of rounds to be performed in the FL process. 
-- ```lr_client``` is the learning rate used by the clients during the training process.
-- ```lr_pretrain``` are the learning rates used by the server during the pre-embedding of the watermark.
-- ```lr_retrain``` are the learning rates used by the server during the embedding of the watermark.
+An example of each way to launch the FL process and embed the watermark can be found in the following sections.
 
 ### Real FHE
 
-Real FHE use the TenSEAL library to perform the watermark embedding using encrypted parameters. The parameters related 
-to the CKKS cryptosystem can be found in the constructor of ```Server_Real_FHE``` in
-```./src/federated_learning/server_real_fhe.py``` file.
+Real FHE uses the TenSEAL library to perform the watermark embedding using encrypted parameters. 
+
+To run the training, the user should :
+- Specify the flag ```--encrypted```.
+- Gives the path of the ```.yaml``` file that contains the configuration of the
+Federated Learning using ```--cfgFl```. The configuration file should be similar to the ones in ```./config/federated_learning/real_*.yaml```.
+- Gives the path of the ```.yaml``` file that contains the configuration of the FHE scheme using ```--cfgFhe```. The configuration file should be similar to the ones in ```./config/fhe_scheme/*.yaml```.
+
+For example, to use the watermark embedding using the encrypted model and VGG, the user can use the following command :
+
+```bash
+python main.py --encrypted --cfgFl ./config/federated_learning/real_vgg.yaml --cfgFhe ./config/fhe_scheme/with_refresh.yaml
+```
+
 
 ### Simulated FHE
 
-Simulated FHE use only the PyTorch library to perform the watermark embedding using plaintext parameters.
+Simulated FHE uses only the PyTorch library to perform the watermark embedding using plaintext parameters. 
+
+To run the training, the user should :
+- Specify the flag ```--plaintext```.
+- Gives the path of the ```.yaml``` file that contains the configuration of the
+Federated Learning using ```--cfgFl```. The configuration file should be similar to the ones in ```./config/federated_learning/simulated_*.yaml```.
+
+For example, to use the watermark embedding using the plaintext model with ResNet18, the user can use the following command :
+
+```bash
+python main.py --plaintext --cfgFl ./config/federated_learning/simulated_resnet.yaml
+```
 
 ## Removal Attacks
 

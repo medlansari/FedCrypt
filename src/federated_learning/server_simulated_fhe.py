@@ -1,3 +1,4 @@
+import logging
 import random
 from time import time
 
@@ -6,10 +7,12 @@ import torch
 from torch import nn, optim
 from tqdm import tqdm
 
+from src.logger import logger
 from src.data.data_splitter import data_splitter
 from src.data.trigger_wafflepattern import WafflePattern
 from src.federated_learning.aggregation import fedavg
 from src.federated_learning.client import Client
+from src.logger import CustomFormatter
 from src.metric import accuracy, watermark_detection_rate, one_hot_encoding
 from src.model.model_choice import model_choice
 from src.plot import plot_FHE
@@ -43,8 +46,8 @@ class Server_Simulated_FHE:
     """
 
     def __init__(self, model: str, dataset: str, nb_clients: int, id: str):
-        print("#---# Server Initialization #---#")
-        print("#---#")
+
+        logger.log(logging.INFO, "Server Initialization")
 
         self.dataset = dataset
         self.nb_clients = nb_clients
@@ -77,8 +80,8 @@ class Server_Simulated_FHE:
         print("Dataset :", dataset)
         print("Number of clients :", self.nb_clients)
 
-        print("#---#")
-        print("#---# Server Initialization Done #---#\n")
+        logger.log(logging.INFO, "Server Initialization Done")
+        print("")
 
     def train(
         self,
@@ -88,8 +91,7 @@ class Server_Simulated_FHE:
         lr_retrain: (float, float),
     ) -> None:
 
-        print("#---# Training #---#")
-        print("#---#\n")
+        logger.log(logging.INFO, "FL Training")
 
         print("Number of rounds :", nb_rounds)
 
@@ -118,8 +120,7 @@ class Server_Simulated_FHE:
 
             print("")
 
-            print("#- Clients training -#")
-            print("#")
+            logger.log(logging.CLIENT, "Training")
 
             selected_clients = random.sample(
                 range(self.nb_clients), int(PRCT_TO_SELECT * self.nb_clients)
@@ -133,6 +134,9 @@ class Server_Simulated_FHE:
                 clients[c].train(lr=lr_client)
 
                 loop.set_description(f"Round [{r}/{nb_rounds}]")
+
+            logger.log(logging.CLIENT, "Training Done")
+            print("")
 
             fedavg(np.array(clients), self.model, self.subset_size, selected_clients)
 
@@ -161,8 +165,7 @@ class Server_Simulated_FHE:
 
             plot_FHE(acc_test_list, acc_watermark_black_list, self.id)
 
-            print("#")
-            print("#","-"*20)
+
 
         torch.save(
             self.model.state_dict(),
@@ -332,6 +335,8 @@ class Server_Simulated_FHE:
 
     def encrypted_pre_embedding(self, lr_pretrain: float) -> float:
 
+        logger.log(logging.WATERMARK, "Pre-Embedding")
+
         acc_watermark_black, loss_bb = watermark_detection_rate(
             self.model_linear, self.detector, self.trigger_set
         )
@@ -348,9 +353,6 @@ class Server_Simulated_FHE:
         optimizer_detector = optim.SGD(self.detector.parameters(), lr=lr_pretrain[1])
 
         criterion = nn.MSELoss()
-
-        print("\n#- Watermark Pre-Embedding -#")
-        print("#")
 
         epoch = 0
 
@@ -410,16 +412,15 @@ class Server_Simulated_FHE:
 
         self.model.load_state_dict(self.model_linear.state_dict())
 
-        print("\n#")
-        print("#","-"*20)
+        print("")
+
+        logger.log(logging.WATERMARK, "Pre-Embedding Done")
 
         return acc_watermark_black
 
     def encrypted_re_embedding(self, lr_retrain: float, max_round: int) -> float:
-        # bn_layers_requires_grad(self.model, False)
 
-        print("\n#- Watermark Re-Embedding -#")
-        print("#")
+        logger.log(logging.WATERMARK, "Re-Embedding")
 
         self.model_linear.load_state_dict(self.model.state_dict())
 
@@ -497,7 +498,6 @@ class Server_Simulated_FHE:
 
         self.model.load_state_dict(self.model_linear.state_dict())
 
-        print("#")
-        print("#","-"*20)
+        logger.log(logging.WATERMARK, "Re-Embedding Done")
 
         return acc_watermark_black_before
