@@ -12,7 +12,6 @@ from src.data.data_splitter import data_splitter
 from src.data.trigger_wafflepattern import WafflePattern
 from src.federated_learning.aggregation import fedavg
 from src.federated_learning.client import Client
-from src.logger import CustomFormatter
 from src.metric import accuracy, watermark_detection_rate, one_hot_encoding
 from src.model.model_choice import model_choice
 from src.plot import plot_FHE
@@ -146,7 +145,7 @@ class Server_Simulated_FHE:
                 lr_retrain, self.max_round
             )
 
-            # acc_watermark_black = 0
+            acc_watermark_black = 0
 
             time_after = time() - time_before
 
@@ -195,8 +194,7 @@ class Server_Simulated_FHE:
             + ".pth",
         )
 
-        print("#---#")
-        print("#---# Training Done #---#\n")
+        logger.log(logging.INFO, "FL Training Done")
 
     def train_overwriting(
         self,

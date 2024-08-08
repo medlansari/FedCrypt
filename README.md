@@ -100,13 +100,13 @@ Real FHE uses the TenSEAL library to perform the watermark embedding using encry
 To run the training, the user should :
 - Specify the flag ```--encrypted```.
 - Gives the path of the ```.yaml``` file that contains the configuration of the
-Federated Learning using ```--cfgFl```. The configuration file should be similar to the ones in ```./config/federated_learning/real_*.yaml```.
+Federated Learning using ```--cfgFl```. The configuration file should be similar to the ones in ```./configs/federated_learning/real_*.yaml```.
 - Gives the path of the ```.yaml``` file that contains the configuration of the FHE scheme using ```--cfgFhe```. The configuration file should be similar to the ones in ```./config/fhe_scheme/*.yaml```.
 
 For example, to use the watermark embedding using the encrypted model and VGG, the user can use the following command :
 
 ```bash
-python main.py --encrypted --cfgFl ./config/federated_learning/real_vgg.yaml --cfgFhe ./config/fhe_scheme/with_refresh.yaml
+python main.py --encrypted --cfgFl ./configs/federated_learning/real_vgg.yaml --cfgFhe ./config/fhe_scheme/with_refresh.yaml
 ```
 
 
@@ -117,12 +117,12 @@ Simulated FHE uses only the PyTorch library to perform the watermark embedding u
 To run the training, the user should :
 - Specify the flag ```--plaintext```.
 - Gives the path of the ```.yaml``` file that contains the configuration of the
-Federated Learning using ```--cfgFl```. The configuration file should be similar to the ones in ```./config/federated_learning/simulated_*.yaml```.
+Federated Learning using ```--cfgFl```. The configuration file should be similar to the ones in ```./configs/federated_learning/simulated_*.yaml```.
 
 For example, to use the watermark embedding using the plaintext model with ResNet18, the user can use the following command :
 
 ```bash
-python main.py --plaintext --cfgFl ./config/federated_learning/simulated_resnet.yaml
+python main.py --plaintext --cfgFl ./configs/federated_learning/simulated_resnet.yaml
 ```
 
 ## Removal Attacks
