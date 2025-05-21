@@ -30,7 +30,7 @@ class WafflePattern(Dataset):
             RGB (bool, optional): A flag to indicate if the images are in RGB format. Defaults to True.
             features (bool, optional): A flag to indicate if the features are to be extracted. Defaults to False.
         """
-        self.images_path = "./trigger_set/WafflePattern/"
+        self.images_path = "./trigger_sets/CWAFFLE/"
         file_list = glob.glob(self.images_path + "*")
         self.data = []
         self.class_count = dict.fromkeys([str(i) for i in range(10)], 0)

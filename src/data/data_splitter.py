@@ -38,97 +38,143 @@ def data_splitter(
     batch_size = BATCH_SIZE_CLIENT
     print("Selected Dataset : ", dataset, "\n")
 
-    if dataset == "CIFAR10":
+    match dataset:
+        case "CIFAR10":
 
-        train_set = torchvision.datasets.CIFAR10(
-            root="~/data/", train=True, download=True, transform=TRANSFORM_TRAIN
-        )
+            train_set = torchvision.datasets.CIFAR10(
+                root="~/data/", train=True, download=True, transform=TRANSFORM_TRAIN
+            )
 
-        test_set = torchvision.datasets.CIFAR10(
-            root="~/data/", train=False, download=True, transform=TRANSFORM_TEST
-        )
-        test_loader = torch.utils.data.DataLoader(
-            test_set,
-            batch_size=BATCH_SIZE_SERVER,
-            shuffle=False,
-            num_workers=NUM_WORKERS,
-            pin_memory=True,
-            drop_last=True,
-        )
+            test_set = torchvision.datasets.CIFAR10(
+                root="~/data/", train=False, download=True, transform=TRANSFORM_TEST
+            )
+            test_loader = torch.utils.data.DataLoader(
+                test_set,
+                batch_size=BATCH_SIZE_SERVER,
+                shuffle=False,
+                num_workers=NUM_WORKERS,
+                pin_memory=True,
+                drop_last=True,
+            )
 
-    elif dataset == "MNIST":
+            num_classes = 10
 
-        train_set = torchvision.datasets.MNIST(
-            root="~/data/", train=True, download=True, transform=TRANSFORM_TRAIN_MNIST
-        )
+        case "CIFAR100":
 
-        test_set = torchvision.datasets.MNIST(
-            root="~/data/", train=False, download=True, transform=TRANSFORM_TEST_MNIST
-        )
-        test_loader = torch.utils.data.DataLoader(
-            test_set,
-            batch_size=BATCH_SIZE_SERVER,
-            shuffle=False,
-            num_workers=NUM_WORKERS,
-            pin_memory=True,
-            drop_last=True,
-        )
+            train_set = torchvision.datasets.CIFAR100(
+                root="~/data/", train=True, download=True, transform=TRANSFORM_TRAIN
+            )
 
-    elif dataset == "MNIST2":
+            test_set = torchvision.datasets.CIFAR100(
+                root="~/data/", train=False, download=True, transform=TRANSFORM_TEST
+            )
+            test_loader = torch.utils.data.DataLoader(
+                test_set,
+                batch_size=BATCH_SIZE_SERVER,
+                shuffle=False,
+                num_workers=NUM_WORKERS,
+                pin_memory=True,
+                drop_last=True,
+            )
 
-        train_set = torchvision.datasets.MNIST(
-            root="~/data/", train=True, download=True, transform=TRANSFORM_TRAIN_MNIST2
-        )
+            num_classes = 100
 
-        indices = torch.concat(
-            [
-                torch.where(train_set.targets == 3)[0],
-                torch.where(train_set.targets == 8)[0],
-            ],
-            dim=0,
-        )
+        case "MNIST":
 
-        train_set.data, train_set.targets = (
-            train_set.data[indices],
-            train_set.targets[indices],
-        )
+            train_set = torchvision.datasets.MNIST(
+                root="~/data/", train=True, download=True, transform=TRANSFORM_TRAIN_MNIST
+            )
 
-        train_set.data = train_set.data.reshape(-1, 784)
+            test_set = torchvision.datasets.MNIST(
+                root="~/data/", train=False, download=True, transform=TRANSFORM_TEST_MNIST
+            )
+            test_loader = torch.utils.data.DataLoader(
+                test_set,
+                batch_size=BATCH_SIZE_SERVER,
+                shuffle=False,
+                num_workers=NUM_WORKERS,
+                pin_memory=True,
+                drop_last=True,
+            )
 
-        train_set.targets = torch.where(
-            train_set.targets == train_set.targets[0].item(), 0, 1
-        )
+            num_classes = 10
 
-        test_set = torchvision.datasets.MNIST(
-            root="~/data/", train=False, download=True, transform=TRANSFORM_TEST_MNIST2
-        )
+        case "FMNIST":
 
-        indices = torch.concat(
-            [
-                torch.where(test_set.targets == 3)[0],
-                torch.where(test_set.targets == 8)[0],
-            ],
-            dim=0,
-        )
+            train_set = torchvision.datasets.FashionMNIST(
+                root="~/data/", train=True, download=True, transform=TRANSFORM_TRAIN_MNIST
+            )
 
-        test_set.data, test_set.targets = (
-            test_set.data[indices],
-            test_set.targets[indices],
-        )
+            test_set = torchvision.datasets.FashionMNIST(
+                root="~/data/", train=False, download=True, transform=TRANSFORM_TEST_MNIST
+            )
+            test_loader = torch.utils.data.DataLoader(
+                test_set,
+                batch_size=BATCH_SIZE_SERVER,
+                shuffle=False,
+                num_workers=NUM_WORKERS,
+                pin_memory=True,
+                drop_last=True,
+            )
 
-        test_set.targets = torch.where(test_set.targets == 3, 0, 1)
+            num_classes = 10
 
-        test_loader = torch.utils.data.DataLoader(
-            test_set,
-            batch_size=BATCH_SIZE_SERVER,
-            shuffle=True,
-            num_workers=NUM_WORKERS,
-            pin_memory=True,
-            drop_last=True,
-        )
+        case "MNIST2":
 
-    else:
-        raise ValueError(f"Dataset '{dataset}' not found.")
+            train_set = torchvision.datasets.MNIST(
+                root="~/data/", train=True, download=True, transform=TRANSFORM_TRAIN_MNIST2
+            )
+
+            indices = torch.concat(
+                [
+                    torch.where(train_set.targets == 3)[0],
+                    torch.where(train_set.targets == 8)[0],
+                ],
+                dim=0,
+            )
+
+            train_set.data, train_set.targets = (
+                train_set.data[indices],
+                train_set.targets[indices],
+            )
+
+            train_set.data = train_set.data.reshape(-1, 784)
+
+            train_set.targets = torch.where(
+                train_set.targets == train_set.targets[0].item(), 0, 1
+            )
+
+            test_set = torchvision.datasets.MNIST(
+                root="~/data/", train=False, download=True, transform=TRANSFORM_TEST_MNIST2
+            )
+
+            indices = torch.concat(
+                [
+                    torch.where(test_set.targets == 3)[0],
+                    torch.where(test_set.targets == 8)[0],
+                ],
+                dim=0,
+            )
+
+            test_set.data, test_set.targets = (
+                test_set.data[indices],
+                test_set.targets[indices],
+            )
+
+            test_set.targets = torch.where(test_set.targets == 3, 0, 1)
+
+            test_loader = torch.utils.data.DataLoader(
+                test_set,
+                batch_size=BATCH_SIZE_SERVER,
+                shuffle=True,
+                num_workers=NUM_WORKERS,
+                pin_memory=True,
+                drop_last=True,
+            )
+
+        case _ :
+            raise ValueError(f"Dataset '{dataset}' not found.")
+
 
     subsets_loader = []
 
@@ -167,4 +213,4 @@ def data_splitter(
 
     print("Size of the test set :", len(test_set), "\n")
 
-    return subsets_loader, np.array(subset_size), test_loader
+    return subsets_loader, np.array(subset_size), test_loader, num_classes

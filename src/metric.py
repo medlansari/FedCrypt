@@ -77,3 +77,52 @@ def watermark_detection_rate(
             accumulate_loss += loss.item()
 
     return round(correct / total, 3), round(accumulate_loss / len(test_loader), 3)
+
+def watermark_detection_rate_black(
+    model: nn.Module, detector: nn.Module, test_loader: torch.utils.data.DataLoader
+) -> tuple[float, float]:
+    model.eval()
+    detector.eval()
+
+    with torch.no_grad():
+        total = 0
+
+        correct = 0
+
+        accumulate_loss = 0
+
+        criterion = nn.MSELoss()
+
+        for inputs, outputs in test_loader:
+            inputs = inputs.to(DEVICE, memory_format=torch.channels_last)
+
+            outputs = outputs.to(DEVICE)
+
+            outputs = one_hot_encoding(outputs)
+
+            with torch.autocast(device_type="cuda"):
+                features_predicted = model(inputs)
+                outputs_predicted = detector(features_predicted)
+
+                loss = criterion(outputs_predicted, outputs)
+
+            predicted = outputs_predicted.argmax(1)
+            total += outputs.size(0)
+            correct += predicted.eq(outputs.argmax(1)).sum().item()
+
+            accumulate_loss += loss.item()
+
+    return round(correct / total, 3), round(accumulate_loss / len(test_loader), 3)
+
+
+def watermark_detection_rate_white(
+    model: nn.Module, secret_key : torch.tensor, message : torch.tensor
+) -> tuple[float, float]:
+
+    reconstructed_message = model.classifier[4].weight.mean(0) @ secret_key
+
+    reconstructed_message = torch.where(reconstructed_message >= 0, 1, -1)
+
+    reconstructed_message = reconstructed_message.detach().cpu()
+
+    return 1-((reconstructed_message != message.cpu()).sum()/message.size(0)).item(), 0

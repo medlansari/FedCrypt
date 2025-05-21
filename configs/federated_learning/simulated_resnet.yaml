@@ -1,5 +1,5 @@
 model: "ResNet"
-dataset: "CIFAR10"
+dataset: "FMNIST"
 
 fl:
   max_round: 80

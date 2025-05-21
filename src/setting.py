@@ -35,6 +35,7 @@ TRANSFORM_TEST = transforms.Compose(
 
 TRANSFORM_TRAIN_MNIST = transforms.Compose(
     [
+        transforms.Grayscale(num_output_channels=3),
         transforms.Resize((28, 28)),
         transforms.ToTensor(),
         transforms.Normalize((0.1307,), (0.3081,)),
@@ -43,6 +44,7 @@ TRANSFORM_TRAIN_MNIST = transforms.Compose(
 
 TRANSFORM_TEST_MNIST = transforms.Compose(
     [
+        transforms.Grayscale(num_output_channels=3),
         transforms.Resize((28, 28)),
         transforms.ToTensor(),
         transforms.Normalize((0.1307,), (0.3081,)),

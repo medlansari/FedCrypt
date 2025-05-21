@@ -12,13 +12,13 @@ from src.data.data_splitter import data_splitter
 from src.data.trigger_wafflepattern import WafflePattern
 from src.federated_learning.aggregation import fedavg
 from src.federated_learning.client import Client
-from src.metric import accuracy, watermark_detection_rate, one_hot_encoding
+from src.metric import accuracy, watermark_detection_rate, one_hot_encoding, watermark_detection_rate_white
 from src.model.model_choice import model_choice
 from src.plot import plot_FHE
 from src.setting import DEVICE, NUM_WORKERS, PRCT_TO_SELECT, MAX_EPOCH_CLIENT
 
 
-class Server_Simulated_FHE:
+class Server_FedTracker:
     """
     The Server_FHE class represents a server in a federated learning system. The server manages the training process
     across multiple clients and embed the watermark in the encrypted global model.
@@ -51,27 +51,21 @@ class Server_Simulated_FHE:
         self.dataset = dataset
         self.nb_clients = nb_clients
         self.model_name = model
-        self.num_classes_watermarking = 10
+        self.num_classes_watermarking = 100
         self.input_size = 32 * 32
 
         self.train_subsets, self.subset_size, self.test_set, self.num_classes_task = data_splitter(
             self.dataset, self.nb_clients
         )
 
-        self.model, self.model_linear, self.detector = model_choice(
+        self.model, _, _ = model_choice(
             self.model_name, self.input_size, self.num_classes_task, self.num_classes_watermarking
         )
         self.model.to(DEVICE)
-        self.model_linear.to(DEVICE)
-        self.detector.to(DEVICE)
 
-        self.trigger_set = torch.utils.data.DataLoader(
-            WafflePattern(RGB=True, features=True),
-            batch_size=10,
-            shuffle=True,
-            num_workers=NUM_WORKERS,
-            pin_memory=True,
-        )
+        self.secret_key = torch.randn((512, 256), device="cuda")
+        self.message = (torch.randint(2, (256,), device="cuda").float() - 0.5) * 2
+
         self.id = id
         self.max_round = 30
 
@@ -97,9 +91,6 @@ class Server_Simulated_FHE:
         acc_watermark_black_list = []
 
         self.encrypted_pre_embedding(lr_pretrain)
-
-        # for name, param in self.model.named_parameters():
-        #    print(f"Layer: {name} | Trainable: {param.requires_grad}")
 
         clients = []
 
@@ -157,8 +148,6 @@ class Server_Simulated_FHE:
             print("Accuracy on the test set :", acc_test)
             print("Loss on the test set :", loss_test)
 
-            # lr_client = lr_client * 0.99
-
             plot_FHE(acc_test_list, acc_watermark_black_list, self.id)
 
 
@@ -177,19 +166,6 @@ class Server_Simulated_FHE:
             + ".pth",
         )
 
-        torch.save(
-            self.detector.state_dict(),
-            "./outputs/detector_"
-            + self.model_name
-            + "_"
-            + str(nb_rounds)
-            + "_"
-            + str(MAX_EPOCH_CLIENT)
-            + "_FHE"
-            + "_"
-            + self.id
-            + ".pth",
-        )
 
         logger.log(logging.INFO, "FL Training Done")
 
@@ -332,68 +308,40 @@ class Server_Simulated_FHE:
 
         logger.log(logging.WATERMARK, "Pre-Embedding")
 
-        acc_watermark_black, loss_bb = watermark_detection_rate(
-            self.model_linear, self.detector, self.trigger_set
-        )
+        acc_watermark_white, loss_wb = watermark_detection_rate_white(self.model, self.secret_key, self.message)
 
-        print("Black-Box WDR:", acc_watermark_black, loss_bb)
-
-        self.model_linear.trainable()
-        self.detector.train()
+        print(f"\rWhite-Box WSR: {acc_watermark_white}, Loss: {loss_wb}")
 
         optimizer = optim.SGD(
-            self.model_linear.classifier[4].parameters(), lr=lr_pretrain[0]
+            self.model.classifier[4].parameters(), lr=lr_pretrain[0]
         )
 
-        optimizer_detector = optim.SGD(self.detector.parameters(), lr=lr_pretrain[1])
-
-        criterion = nn.MSELoss()
+        criterion = lambda x : torch.sum(torch.relu(1 - (x * self.message)))
 
         epoch = 0
 
-        # w0 = self.model.fc1.weight.data.detach().clone()
-        w0 = self.model_linear.classifier[4].weight.data.detach().clone()
-
-        while acc_watermark_black < 1.0:
+        while acc_watermark_white < 1.0:
 
             accumulate_loss = 0
 
-            for inputs, outputs in self.trigger_set:
-                optimizer.zero_grad(set_to_none=True)
-                optimizer_detector.zero_grad(set_to_none=True)
+            optimizer.zero_grad(set_to_none=True)
 
-                inputs = inputs.to(DEVICE, memory_format=torch.channels_last)
+            with torch.autocast(device_type="cuda"):
 
-                outputs = outputs.to(DEVICE)
+                reconstructed_message = self.model.classifier[4].weight.mean(0) @ self.secret_key
 
-                outputs = one_hot_encoding(outputs)
-
-                with torch.autocast(device_type="cuda"):
-                    features_predicted = self.model_linear(inputs)
-
-                    outputs_predicted = self.detector(features_predicted)
-
-                    blackbox_loss = criterion(outputs_predicted, outputs)
-
-                    diff = (1 / 2) * (w0 - self.model_linear.classifier[4].weight).pow(
-                        2
-                    ).sum()
-
-                    loss = blackbox_loss + (1e-1 * diff)
+                loss = criterion(reconstructed_message)
 
                 loss.backward()
 
                 optimizer.step()
-                optimizer_detector.step()
 
                 accumulate_loss += loss.item()
 
-            acc_watermark_black, loss_bb = watermark_detection_rate(
-                self.model_linear, self.detector, self.trigger_set
-            )
+            acc_watermark_white, loss_wb = watermark_detection_rate_white(self.model, self.secret_key, self.message)
 
             print(
-                f"\rBlack-Box WDR: {acc_watermark_black}, Loss: {loss_bb}, Diff : {round(diff.item(), 3)}",
+                f"\rWhite-Box WSR: {acc_watermark_white}, Loss: {loss_wb}",
                 end="",
                 flush=True,
             )
@@ -403,96 +351,54 @@ class Server_Simulated_FHE:
             if epoch > 300:
                 break
 
-        # bn_layers_requires_grad(self.model, True)
-
-        self.model.load_state_dict(self.model_linear.state_dict())
-
         print("")
 
         logger.log(logging.WATERMARK, "Pre-Embedding Done")
 
-        return acc_watermark_black
+        return acc_watermark_white
 
     def encrypted_re_embedding(self, lr_retrain: float, max_round: int) -> float:
 
         logger.log(logging.WATERMARK, "Re-Embedding")
 
-        self.model_linear.load_state_dict(self.model.state_dict())
+        acc_watermark_white, loss_wb = watermark_detection_rate_white(self.model, self.secret_key, self.message)
 
-        acc_watermark_black_before, loss_bb = watermark_detection_rate(
-            self.model_linear, self.detector, self.trigger_set
-        )
-
-        self.model_linear.trainable()
-        self.detector.train()
-
-        # optimizer = optim.SGD(self.model.fc1.parameters(), lr=lr_retrain)
+        print(f"\rWhite-Box WSR: {acc_watermark_white}, Loss: {loss_wb}")
 
         optimizer = optim.SGD(
-            self.model_linear.classifier[4].parameters(), lr=lr_retrain[0]
+            self.model.classifier[4].parameters(), lr=lr_retrain[0]
         )
 
-        optimizer_detector = optim.SGD(self.detector.parameters(), lr=lr_retrain[1])
+        criterion = lambda x: torch.sum(torch.relu(1 - (x * self.message)))
 
-        criterion = nn.MSELoss()
-
-        print("Black-Box WDR:", acc_watermark_black_before, loss_bb)
-
-        loop = tqdm(list(range(max_round)))
-
-        w0 = self.model_linear.classifier[4].weight.data.detach().clone()
-
-        for idx, epoch in enumerate(loop):
+        for i in range(max_round):
 
             accumulate_loss = 0
 
-            for inputs, outputs in self.trigger_set:
-                optimizer.zero_grad(set_to_none=True)
-                optimizer_detector.zero_grad(set_to_none=True)
+            optimizer.zero_grad(set_to_none=True)
 
-                inputs = inputs.to(DEVICE, memory_format=torch.channels_last)
+            with torch.autocast(device_type="cuda"):
 
-                outputs = outputs.to(DEVICE)
+                reconstructed_message = self.model.classifier[4].weight.mean(0) @ self.secret_key
 
-                outputs = one_hot_encoding(outputs)
-
-                with torch.autocast(device_type="cuda"):
-                    features_predicted = self.model_linear(inputs)
-
-                    outputs_predicted = self.detector(features_predicted)
-
-                    blackbox_loss = criterion(outputs_predicted, outputs)
-
-                    regul = (1 / 2) * (w0 - self.model_linear.classifier[4].weight).pow(
-                        2
-                    ).sum()
-
-                    loss = blackbox_loss + (1e-2 * regul)
+                loss = criterion(reconstructed_message)
 
                 loss.backward()
 
                 optimizer.step()
-                optimizer_detector.step()
 
                 accumulate_loss += loss.item()
 
-            acc_watermark_black, loss_watermark = watermark_detection_rate(
-                self.model_linear, self.detector, self.trigger_set
+            acc_watermark_white, loss_wb = watermark_detection_rate_white(self.model, self.secret_key, self.message)
+
+            print(
+                f"\rWhite-Box WSR: {acc_watermark_white}, Loss: {loss_wb}",
+                end="",
+                flush=True,
             )
 
-            loop.set_description(f"Epoch [{epoch}/{max_round}]")
-
-            loop.set_postfix(
-                {
-                    "Black-Box WDR :": acc_watermark_black,
-                    "Watermarking Loss ": loss_watermark,
-                }
-            )
-
-        # bn_layers_requires_grad(self.model, True)
-
-        self.model.load_state_dict(self.model_linear.state_dict())
+        print("")
 
         logger.log(logging.WATERMARK, "Re-Embedding Done")
 
-        return acc_watermark_black_before
+        return acc_watermark_white
