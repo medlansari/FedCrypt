@@ -122,7 +122,7 @@ Federated Learning using ```--cfgFl```. The configuration file should be similar
 For example, to use the watermark embedding using the plaintext model with ResNet18, the user can use the following command :
 
 ```bash
-python main.py --plaintext --cfgFl ./configs/federated_learning/simulated_resnet.yaml
+python main.py --plaintext --cfgFl ./configs/federated_learning/simulated_resnet_fedcrypt.yaml
 ```
 
 ## Removal Attacks

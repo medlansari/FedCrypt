@@ -345,8 +345,7 @@ class Server_FedTracker:
 
         # epoch = 0
 
-        for i in range(self.max_round):
-
+        while acc_watermark_white < 1.0:
 
             accumulate_loss = 0
 
@@ -362,7 +361,7 @@ class Server_FedTracker:
 
                 # predicted = self.model(inputs)
 
-                loss =  1e-2 * criterion_white(reconstructed_message) # + criterion_black(predicted, outputs.long())
+                loss =  criterion_white(reconstructed_message) # + criterion_black(predicted, outputs.long())
 
                 loss.backward()
 

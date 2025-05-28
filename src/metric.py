@@ -119,10 +119,13 @@ def watermark_detection_rate_white(
     model: nn.Module, secret_key : torch.tensor, message : torch.tensor
 ) -> tuple[float, float]:
 
-    reconstructed_message = model.classifier[1].weight.mean(0) @ secret_key
+    reconstructed_message = model.classifier[4].weight.mean(0) @ secret_key
 
     reconstructed_message = torch.where(reconstructed_message >= 0, 1, -1)
 
     reconstructed_message = reconstructed_message.detach().cpu()
 
     return 1-((reconstructed_message != message.cpu()).sum()/message.size(0)).item(), 0
+
+def watermark_criterion(reconstructed_message: torch.Tensor, message: torch.Tensor) -> torch.Tensor:
+    return torch.sum(torch.relu(1 - (reconstructed_message * message)))

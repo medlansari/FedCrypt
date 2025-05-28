@@ -2,6 +2,7 @@ from time import time
 import argparse
 import yaml
 
+from src.federated_learning.server_fedipr import Server_FedIPR
 from src.federated_learning.server_fedtracker import Server_FedTracker
 from src.federated_learning.server_real_fhe import Server_Real_FHE
 from src.federated_learning.server_simulated_fhe import Server_Simulated_FHE
@@ -44,6 +45,13 @@ def main():
                  tuple(map(float, configFl["watermarking"]["lr_pretrain"])),
                  tuple(map(float, configFl["watermarking"]["lr_retrain"])))
 
+        case "FedIPR":
+
+            print("----> Dynamic Watermarking using FedIPR <----\n")
+            server = Server_FedIPR(configFl["model"], configFl["dataset"], configFl["fl"]["nb_clients"], id)
+            server.train(configFl["fl"]["max_round"], float(configFl["fl"]["lr_clients"]),
+                         tuple(map(float, configFl["watermarking"]["lr_pretrain"])),
+                         tuple(map(float, configFl["watermarking"]["lr_retrain"])))
 
 
 

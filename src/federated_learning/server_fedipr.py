@@ -7,6 +7,7 @@ import torch
 from torch import nn, optim
 from tqdm import tqdm
 
+from src.federated_learning.client_fedipr import Client_Fedipr
 from src.logger import logger
 from src.data.data_splitter import data_splitter
 from src.data.trigger_wafflepattern import WafflePattern
@@ -18,7 +19,7 @@ from src.plot import plot_FHE
 from src.setting import DEVICE, NUM_WORKERS, PRCT_TO_SELECT, MAX_EPOCH_CLIENT
 
 
-class Server_FedTracker:
+class Server_FedIPR:
     """
     The Server_FHE class represents a server in a federated learning system. The server manages the training process
     across multiple clients and embed the watermark in the encrypted global model.
@@ -88,16 +89,16 @@ class Server_FedTracker:
         print("Number of rounds :", nb_rounds)
 
         acc_test_list = []
-        acc_watermark_black_list = []
-
-        self.encrypted_pre_embedding(lr_pretrain)
+        acc_watermark_list = []
 
         clients = []
 
         for c in range(self.nb_clients):
-            client = Client(
+            client = Client_Fedipr(
                 self.model_name,
                 self.model.state_dict(),
+                self.message,
+                self.secret_key,
                 self.input_size,
                 self.num_classes_task,
                 self.train_subsets[c],
@@ -129,26 +130,20 @@ class Server_FedTracker:
 
             fedavg(np.array(clients), self.model, self.subset_size, selected_clients)
 
-            time_before = time()
+            acc_watermark = watermark_detection_rate_white(self.model, self.secret_key, self.message)[0]
 
-            acc_watermark_black = self.encrypted_re_embedding(
-                lr_retrain, self.max_round
-            )
-
-            time_after = time() - time_before
-
-            print("Time for watermark embedding :", round(time_after, 2))
+            print("Watermark detection rate:", acc_watermark)
 
             acc_test, loss_test = accuracy(self.model, self.test_set)
 
             acc_test_list.append(acc_test)
 
-            acc_watermark_black_list.append(acc_watermark_black)
+            acc_watermark_list.append(acc_watermark)
 
             print("Accuracy on the test set :", acc_test)
             print("Loss on the test set :", loss_test)
 
-            plot_FHE(acc_test_list, acc_watermark_black_list, self.id)
+            plot_FHE(acc_test_list, acc_watermark_list, self.id)
 
 
 
@@ -215,9 +210,11 @@ class Server_FedTracker:
         clients = []
 
         for c in range(self.nb_clients):
-            client = Client(
+            client = Client_Fedipr(
                 self.model_name,
                 self.model.state_dict(),
+                self.message,
+                self.secret_key,
                 self.input_size,
                 self.num_classes_task,
                 self.train_subsets[c],
@@ -304,101 +301,3 @@ class Server_FedTracker:
             + ".pth",
         )
 
-    def encrypted_pre_embedding(self, lr_pretrain: float) -> float:
-
-        logger.log(logging.WATERMARK, "Pre-Embedding")
-
-        acc_watermark_white, loss_wb = watermark_detection_rate_white(self.model, self.secret_key, self.message)
-
-        print(f"\rWhite-Box WSR: {acc_watermark_white}, Loss: {loss_wb}")
-
-        optimizer = optim.SGD(
-            self.model.classifier[4].parameters(), lr=lr_pretrain[0]
-        )
-
-        criterion = lambda x : torch.sum(torch.relu(1 - (x * self.message)))
-
-        epoch = 0
-
-        while acc_watermark_white < 1.0:
-
-            accumulate_loss = 0
-
-            optimizer.zero_grad(set_to_none=True)
-
-            with torch.autocast(device_type="cuda"):
-
-                reconstructed_message = self.model.classifier[4].weight.mean(0) @ self.secret_key
-
-                loss = criterion(reconstructed_message)
-
-                loss.backward()
-
-                optimizer.step()
-
-                accumulate_loss += loss.item()
-
-            acc_watermark_white, loss_wb = watermark_detection_rate_white(self.model, self.secret_key, self.message)
-
-            print(
-                f"\rWhite-Box WSR: {acc_watermark_white}, Loss: {loss_wb}",
-                end="",
-                flush=True,
-            )
-
-            epoch += 1
-
-            if epoch > 300:
-                break
-
-        print("")
-
-        logger.log(logging.WATERMARK, "Pre-Embedding Done")
-
-        return acc_watermark_white
-
-    def encrypted_re_embedding(self, lr_retrain: float, max_round: int) -> float:
-
-        logger.log(logging.WATERMARK, "Re-Embedding")
-
-        acc_watermark_white, loss_wb = watermark_detection_rate_white(self.model, self.secret_key, self.message)
-
-        print(f"\rWhite-Box WSR: {acc_watermark_white}, Loss: {loss_wb}")
-
-        optimizer = optim.SGD(
-            self.model.classifier[4].parameters(), lr=lr_retrain[0]
-        )
-
-        criterion = lambda x: torch.sum(torch.relu(1 - (x * self.message)))
-
-        for i in range(max_round):
-
-            accumulate_loss = 0
-
-            optimizer.zero_grad(set_to_none=True)
-
-            with torch.autocast(device_type="cuda"):
-
-                reconstructed_message = self.model.classifier[4].weight.mean(0) @ self.secret_key
-
-                loss = criterion(reconstructed_message)
-
-                loss.backward()
-
-                optimizer.step()
-
-                accumulate_loss += loss.item()
-
-            acc_watermark_white, loss_wb = watermark_detection_rate_white(self.model, self.secret_key, self.message)
-
-            print(
-                f"\rWhite-Box WSR: {acc_watermark_white}, Loss: {loss_wb}",
-                end="",
-                flush=True,
-            )
-
-        print("")
-
-        logger.log(logging.WATERMARK, "Re-Embedding Done")
-
-        return acc_watermark_white
