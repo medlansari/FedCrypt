@@ -1,7 +1,9 @@
 import numpy as np
 import torch
 import torchvision
+from torch.utils.data import random_split, Subset
 
+from src.data.dataset_covid import Covid_dataset
 from src.setting import (
     NUM_WORKERS,
     BATCH_SIZE_CLIENT,
@@ -11,7 +13,7 @@ from src.setting import (
     TRANSFORM_TRAIN_MNIST,
     TRANSFORM_TEST_MNIST,
     TRANSFORM_TEST_MNIST2,
-    TRANSFORM_TRAIN_MNIST2,
+    TRANSFORM_TRAIN_MNIST2, TRANSFORM_TRAIN_COVID, TRANSFORM_TEST_COVID,
 )
 
 
@@ -172,6 +174,28 @@ def data_splitter(
                 drop_last=True,
             )
 
+        case "COVID":
+
+            dataset = Covid_dataset("~/data/covid")
+
+            train_size = int(0.8 * len(dataset))
+            test_size = len(dataset) - train_size
+            train_set, test_set = random_split(dataset,[train_size, test_size])
+
+            train_set.dataset.transform = TRANSFORM_TRAIN_COVID
+            test_set.dataset.transform = TRANSFORM_TEST_COVID
+
+            test_loader = torch.utils.data.DataLoader(
+                test_set,
+                batch_size=BATCH_SIZE_SERVER,
+                shuffle=True,
+                num_workers=NUM_WORKERS,
+                pin_memory=True,
+                drop_last=True,
+            )
+
+            num_classes = 3
+
         case _ :
             raise ValueError(f"Dataset '{dataset}' not found.")
 
@@ -182,10 +206,12 @@ def data_splitter(
 
     if len(train_set) % nb_clients:
         extra = len(train_set) % nb_clients
-        train_set.data, train_set.targets = (
-            train_set.data[:-extra],
-            train_set.targets[:-extra],
-        )
+        # train_set.data, train_set.targets = (
+        #     train_set.data[:-extra],
+        #     train_set.targets[:-extra],
+        # )
+        indices = list(range(len(train_set) - extra))
+        train_set = Subset(train_set, indices)
 
     subset_size = [subsets_size for i in range(nb_clients)]
 

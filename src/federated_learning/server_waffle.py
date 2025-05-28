@@ -5,10 +5,7 @@ from time import time
 import numpy as np
 import torch
 from torch import nn, optim
-from torchvision import transforms
 from tqdm import tqdm
-import albumentations as A
-from albumentations.pytorch import ToTensorV2
 
 from src.logger import logger
 from src.data.data_splitter import data_splitter
@@ -18,10 +15,10 @@ from src.federated_learning.client import Client
 from src.metric import accuracy, watermark_detection_rate, one_hot_encoding, watermark_detection_rate_white
 from src.model.model_choice import model_choice
 from src.plot import plot_FHE
-from src.setting import DEVICE, NUM_WORKERS, PRCT_TO_SELECT, MAX_EPOCH_CLIENT, TRANSFORM_TEST_COVID
+from src.setting import DEVICE, NUM_WORKERS, PRCT_TO_SELECT, MAX_EPOCH_CLIENT
 
 
-class Server_FedTracker:
+class Server_Waffle:
     """
     The Server_FHE class represents a server in a federated learning system. The server manages the training process
     across multiple clients and embed the watermark in the encrypted global model.
@@ -71,22 +68,6 @@ class Server_FedTracker:
 
         self.id = id
         self.max_round = 30
-
-        # trigger = WafflePattern(RGB=True)
-
-        # trigger.transform = transforms.Compose([
-        #         transforms.Resize(256),
-        #         transforms.ToTensor(),
-        #         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-        #     ])
-        #
-        # self.trigger_set = torch.utils.data.DataLoader(
-        #     trigger,
-        #     batch_size=16,
-        #     shuffle=True,
-        #     num_workers=NUM_WORKERS,
-        #     pin_memory=True,
-        # )
 
         print("Dataset :", dataset)
         print("Number of clients :", self.nb_clients)
@@ -331,38 +312,25 @@ class Server_FedTracker:
 
         print(f"\rWhite-Box WSR: {acc_watermark_white}, Loss: {loss_wb}")
 
-        # optimizer1 = optim.SGD(
-        #     self.model.classifier[1].parameters(), lr=lr_pretrain[0]
-        # )
-
         optimizer = optim.SGD(
-            self.model.parameters(), lr=lr_pretrain[0]
+            self.model.classifier[4].parameters(), lr=lr_pretrain[0]
         )
 
-        criterion_white = lambda x : torch.sum(torch.relu(1 - (x * self.message)))
+        criterion = lambda x : torch.sum(torch.relu(1 - (x * self.message)))
 
-        # criterion_black = nn.CrossEntropyLoss()
+        epoch = 0
 
-        # epoch = 0
-
-        for i in range(self.max_round):
-
+        while acc_watermark_white < 1.0:
 
             accumulate_loss = 0
 
             optimizer.zero_grad(set_to_none=True)
 
-            # inputs = inputs.to(DEVICE, memory_format=torch.channels_last)
-
-            # outputs = outputs.to(device=DEVICE)
-
             with torch.autocast(device_type="cuda"):
 
                 reconstructed_message = self.model.classifier[4].weight.mean(0) @ self.secret_key
 
-                # predicted = self.model(inputs)
-
-                loss =  1e-2 * criterion_white(reconstructed_message) # + criterion_black(predicted, outputs.long())
+                loss = criterion(reconstructed_message)
 
                 loss.backward()
 
@@ -372,19 +340,16 @@ class Server_FedTracker:
 
             acc_watermark_white, loss_wb = watermark_detection_rate_white(self.model, self.secret_key, self.message)
 
-            # acc_watermark_black, loss_bb = accuracy(self.model, self.trigger_set)
-
             print(
-                f"\rWhite-Box WSR: {acc_watermark_white}, Loss: {loss_wb}", end="",
+                f"\rWhite-Box WSR: {acc_watermark_white}, Loss: {loss_wb}",
+                end="",
                 flush=True,
             )
 
-            # , Black-Box WSR: {acc_watermark_black}, Loss: {loss_bb}, Accumulate Loss: {accumulate_loss}",
+            epoch += 1
 
-            # epoch += 1
-            #
-            # if epoch > 500:
-            #     break
+            if epoch > 300:
+                break
 
         print("")
 
@@ -401,30 +366,22 @@ class Server_FedTracker:
         print(f"\rWhite-Box WSR: {acc_watermark_white}, Loss: {loss_wb}")
 
         optimizer = optim.SGD(
-            self.model.parameters(), lr=lr_retrain[0]
+            self.model.classifier[4].parameters(), lr=lr_retrain[0]
         )
 
-        criterion_white = lambda x: torch.sum(torch.relu(1 - (x * self.message)))
-
-        # criterion_black = nn.CrossEntropyLoss()
+        criterion = lambda x: torch.sum(torch.relu(1 - (x * self.message)))
 
         for i in range(max_round):
-
 
             accumulate_loss = 0
 
             optimizer.zero_grad(set_to_none=True)
 
-            # inputs = inputs.to(DEVICE, memory_format=torch.channels_last)
-            #
-            # outputs = outputs.to(device=DEVICE)
-
             with torch.autocast(device_type="cuda"):
+
                 reconstructed_message = self.model.classifier[4].weight.mean(0) @ self.secret_key
 
-                # predicted = self.model(inputs)
-
-                loss =  criterion_white(reconstructed_message) # + criterion_black(predicted, outputs.long())
+                loss = criterion(reconstructed_message)
 
                 loss.backward()
 
@@ -434,14 +391,11 @@ class Server_FedTracker:
 
             acc_watermark_white, loss_wb = watermark_detection_rate_white(self.model, self.secret_key, self.message)
 
-            # acc_watermark_black, loss_bb = accuracy(self.model, self.trigger_set)
-
             print(
-                f"\rWhite-Box WSR: {acc_watermark_white}, Loss: {loss_wb}", end="",
+                f"\rWhite-Box WSR: {acc_watermark_white}, Loss: {loss_wb}",
+                end="",
                 flush=True,
             )
-
-            # , Black-Box WSR: {acc_watermark_black}, Loss: {loss_bb}, Accumulate Loss: {accumulate_loss}",
 
         print("")
 

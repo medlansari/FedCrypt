@@ -27,9 +27,10 @@ class VGG(nn.Module):
         self.features = features
         self.linear = linear
         if linear:
+            self.in_features = 512 # 32768
             self.classifier = nn.Sequential(
                 Identity(),
-                nn.Linear(512, 512),
+                nn.Linear(self.in_features, 512),
                 # nn.BatchNorm1d(512),
                 Identity(),
                 Identity(),
@@ -41,9 +42,10 @@ class VGG(nn.Module):
             self.trainable()
 
         else:
+            self.in_features = 512 # 32768
             self.classifier = nn.Sequential(
                 nn.Dropout(),
-                nn.Linear(512, 512),
+                nn.Linear(self.in_features, 512),
                 # nn.BatchNorm1d(512),
                 nn.ReLU(True),
                 nn.Dropout(),
@@ -61,7 +63,7 @@ class VGG(nn.Module):
 
     def forward(self, x):
         x = self.features(x)
-        x = x.view(x.size(0), -1)
+        x = x.reshape(x.size(0), -1)
         x = self.classifier(x)
         if not (self.linear):
             return self.last_layer(x)

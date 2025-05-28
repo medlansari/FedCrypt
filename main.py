@@ -20,7 +20,7 @@ def main():
 
     configFl = yaml.safe_load(open(args.cfgFl, 'r'))
 
-    id = str(time())
+    id = str(time()) + "_" + configFl["model"] + "_" + configFl["dataset"] + "_" + args.method
 
     match args.method:
         case "FedCrypt":

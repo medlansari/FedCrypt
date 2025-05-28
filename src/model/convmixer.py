@@ -78,11 +78,11 @@ class ConvMixer(nn.Module):
             param.requires_grad = True
 
 
-def convmixer(linear=False):
+def convmixer(linear=False, num_classes=10):
     if linear:
-        return ConvMixer(256, 8, True, 5, 2, 10)
+        return ConvMixer(256, 8, True, 5, 2, num_classes)
     else:
-        return ConvMixer(256, 8, False, 5, 2, 10)
+        return ConvMixer(256, 8, False, 5, 2, num_classes)
 
 
 class convmixer_detector(nn.Module):

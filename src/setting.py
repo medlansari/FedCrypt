@@ -1,5 +1,7 @@
 import torch
 from torchvision import transforms
+import albumentations as A
+from albumentations.pytorch import ToTensorV2
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 NUM_WORKERS = 4  # Number of workers for the dataloader
@@ -58,3 +60,18 @@ TRANSFORM_TRAIN_MNIST2 = transforms.Compose(
 TRANSFORM_TEST_MNIST2 = transforms.Compose(
     [transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))]
 )
+
+
+TRANSFORM_TRAIN_COVID = A.Compose([
+            A.LongestMaxSize(max_size=256),
+            A.GaussianBlur(blur_limit=(3, 7), p=0.5),
+            A.CLAHE(clip_limit=2.0, tile_grid_size=(8, 8)),
+            A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+            ToTensorV2(),
+        ])
+
+TRANSFORM_TEST_COVID = A.Compose([
+    A.LongestMaxSize(max_size=256),
+    A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+    ToTensorV2(),
+])

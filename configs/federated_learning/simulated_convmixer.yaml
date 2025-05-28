@@ -1,5 +1,5 @@
 model: "ConvMixer"
-dataset: "CIFAR10"
+dataset: "CIFAR100"
 
 fl:
   max_round: 80

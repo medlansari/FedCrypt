@@ -17,7 +17,7 @@ def model_choice(model: str, input_size, num_classes, num_classes_watermarking, 
     elif model == "VGG_encrypted":
         return init_vgg(num_classes), init_vgg(num_classes)
     elif model == "ConvMixer":
-        return convmixer(linear=False), convmixer(linear=True), convmixer_detector(num_classes_watermarking)
+        return convmixer(linear=False, num_classes=num_classes), convmixer(linear=True, num_classes=num_classes), convmixer_detector(num_classes_watermarking)
     elif model == "ResNet":
         return ResNet(False, num_classes), ResNet(True, num_classes), resnet_detector(num_classes_watermarking)
     elif model == "AlexNet":

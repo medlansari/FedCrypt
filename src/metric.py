@@ -27,7 +27,7 @@ def accuracy(
             with torch.autocast(device_type="cuda"):
                 outputs_predicted = model(inputs)
 
-                loss = criterion(outputs_predicted, outputs)
+                loss = criterion(outputs_predicted, outputs.long())
 
             predicted = outputs_predicted.argmax(1)
             total += outputs.size(0)
@@ -119,7 +119,7 @@ def watermark_detection_rate_white(
     model: nn.Module, secret_key : torch.tensor, message : torch.tensor
 ) -> tuple[float, float]:
 
-    reconstructed_message = model.classifier[4].weight.mean(0) @ secret_key
+    reconstructed_message = model.classifier[1].weight.mean(0) @ secret_key
 
     reconstructed_message = torch.where(reconstructed_message >= 0, 1, -1)
 

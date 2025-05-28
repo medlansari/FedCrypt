@@ -26,18 +26,19 @@ class Server_Real_FHE:
         self.model_name = model
         self.dataset = dataset
         self.nb_clients = nb_clients
-        self.num_classes_task = 10
         self.num_classes_watermarking = 2
         self.input_size = 32 * 32
 
+        self.train_subsets, self.subset_size, self.test_set, self.num_classes_task = data_splitter(
+            self.dataset, self.nb_clients
+        )
+
         self.model = model_choice(
-            self.model_name, self.input_size, self.num_classes_task
+            self.model_name, self.input_size, self.num_classes_task, self.num_classes_watermarking
         )[0]
         self.model.to(DEVICE)
 
-        self.train_subsets, self.subset_size, self.test_set = data_splitter(
-            self.dataset, self.nb_clients
-        )
+
         self.detector = Detector(self.num_classes_watermarking)
         self.detector.to(DEVICE)
 

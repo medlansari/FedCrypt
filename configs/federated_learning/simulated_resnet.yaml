@@ -1,5 +1,5 @@
 model: "ResNet"
-dataset: "FMNIST"
+dataset: "MNIST"
 
 fl:
   max_round: 80
