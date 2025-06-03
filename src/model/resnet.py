@@ -1,3 +1,4 @@
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -41,13 +42,15 @@ class ResidualBlock(nn.Module):
 
 
 class ResNet(nn.Module):
-    def __init__(self, linear, num_classes=10):
+    def __init__(self, linear, features_extraction=False, num_classes=10):
         super(ResNet, self).__init__()
         self.linear = linear
         if linear:
             self.activation = Identity()
         else:
             self.activation = nn.ReLU()
+
+        self.features_extraction = features_extraction
         self.inchannel = 64
         self.conv1 = nn.Sequential(
             nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1, bias=False),
@@ -83,6 +86,8 @@ class ResNet(nn.Module):
         out = self.layer4(out)
         out = F.avg_pool2d(out, 4)
         out = out.view(out.size(0), -1)
+        if self.features_extraction:
+            return out
         out = self.activation(self.classifier(out))
         if self.linear:
             return out
@@ -112,3 +117,14 @@ class resnet_detector(nn.Module):
         z1 = self.fc1(x)
         z2 = self.activation(z1)
         return self.fc2(z2)
+
+
+class resnet_detector_feature(nn.Module):
+
+    def __init__(self, output_size=32):
+        super().__init__()
+        self.fc1 = nn.Linear(512, output_size)
+        self.activation = torch.tanh
+
+    def forward(self, x):
+        return self.activation(self.fc1(x))

@@ -127,5 +127,43 @@ def watermark_detection_rate_white(
 
     return 1-((reconstructed_message != message.cpu()).sum()/message.size(0)).item(), 0
 
+def watermark_detection_rate_key(
+    model: nn.Module, detector: nn.Module, test_loader: torch.utils.data.DataLoader
+) -> tuple[float, float]:
+    model.eval()
+    detector.eval()
+
+    with torch.no_grad():
+        total = 0
+
+        cumulated_ber = 0
+
+        accumulate_loss = 0
+
+        criterion = nn.CrossEntropyLoss()
+
+        for inputs, outputs in test_loader:
+            inputs = inputs.to(DEVICE, memory_format=torch.channels_last)
+
+            outputs = outputs.to(DEVICE)
+
+            with torch.autocast(device_type="cuda"):
+                features_predicted = model(inputs)
+                outputs_predicted = detector(features_predicted)
+
+                loss = criterion(outputs_predicted, outputs)
+
+            reconstructed_message = torch.where(outputs_predicted >= 0, 1, -1)
+
+            reconstructed_message = reconstructed_message.detach().cpu()
+
+            ber = torch.where(reconstructed_message + outputs.cpu() == 0,1.,0.).sum(1).mean()
+
+            total += 1
+
+            cumulated_ber += ber.item()
+
+    return round(1-(cumulated_ber/(total*32)), 3), round(accumulate_loss / len(test_loader), 3)
+
 def watermark_criterion(reconstructed_message: torch.Tensor, message: torch.Tensor) -> torch.Tensor:
     return torch.sum(torch.relu(1 - (reconstructed_message * message)))

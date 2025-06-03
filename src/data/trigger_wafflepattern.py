@@ -21,7 +21,7 @@ class WafflePattern(Dataset):
         features (bool): A flag to indicate if the features are to be extracted.
     """
 
-    def __init__(self, RGB=True, features=False):
+    def __init__(self, RGB=True, features=False, message=None):
         """
         Initializes the WafflePattern with the path to the images and an empty list for the data.
         It then loads the images from the directory and stores their paths and class names in the data list.
@@ -37,7 +37,10 @@ class WafflePattern(Dataset):
         for class_path in file_list:
             class_name = class_path.split("/")[-1]
             for img_path in glob.glob(class_path + "/*.png"):
-                self.data.append([img_path, class_name])
+                if features:
+                    self.data.append([img_path, message])
+                else:
+                    self.data.append([img_path, class_name])
 
         print("Size of the trigger set :", len(self.data))
 
@@ -72,6 +75,15 @@ class WafflePattern(Dataset):
         img = Image.open(img_path)
         if not (self.RGB):
             img = img.convert("L")
-        class_id = torch.tensor(int(class_name))
-        img_tensor = self.transform(img)
-        return img_tensor.float(), class_id.float()
+
+        if self.features:
+            class_id = class_name
+
+            img_tensor = self.transform(img)
+            return img_tensor.float(), class_id
+
+        else:
+            class_id = torch.tensor(int(class_name))
+
+            img_tensor = self.transform(img)
+            return img_tensor.float(), class_id.float()
