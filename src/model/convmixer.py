@@ -1,3 +1,4 @@
+import torch
 import torch.nn as nn
 
 from src.model.activation import Identity, ReLU_Poly
@@ -20,6 +21,10 @@ class ConvMixer(nn.Module):
             self.activation = Identity()
         else:
             self.activation = nn.GELU()
+
+        self.features_extraction = False
+
+        self.dim = dim
 
         self.conv1 = nn.Conv2d(3, dim, kernel_size=patch_size, stride=patch_size)
         self.bn1 = nn.BatchNorm2d(dim)
@@ -53,7 +58,8 @@ class ConvMixer(nn.Module):
         )
         self.fc = nn.Linear(128, n_classes)
 
-    def forward(self, x):
+
+    def forward(self, x, features_extraction=False):
         x = self.conv1(x)
         x = self.activation(x)
         x = self.bn1(x)
@@ -61,6 +67,8 @@ class ConvMixer(nn.Module):
             x = block(x)
         x = self.avgpool(x)
         x = self.flatten(x)
+        if features_extraction:
+            return x
         x = self.classifier(x)
         if self.linear:
             return x
@@ -78,11 +86,11 @@ class ConvMixer(nn.Module):
             param.requires_grad = True
 
 
-def convmixer(linear=False, num_classes=10):
+def convmixer(linear=False, num_classes=10, dim=256):
     if linear:
-        return ConvMixer(256, 8, True, 5, 2, num_classes)
+        return ConvMixer(dim, 8, True, 5, 2, num_classes)
     else:
-        return ConvMixer(256, 8, False, 5, 2, num_classes)
+        return ConvMixer(dim, 8, False, 5, 2, num_classes)
 
 
 class convmixer_detector(nn.Module):
@@ -99,3 +107,13 @@ class convmixer_detector(nn.Module):
         z1 = self.fc1(x)
         z2 = self.activation(z1)
         return self.fc2(z2)
+
+
+class convmixer_detector_feature(nn.Module):
+
+    def __init__(self, output_size=32):
+        super().__init__()
+        self.fc1 = nn.Linear(256, output_size)
+
+    def forward(self, x):
+        return self.fc1(x)

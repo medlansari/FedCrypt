@@ -12,7 +12,7 @@ from src.federated_learning.server_wholeaked import Server_Wholeaked
 def main():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--method', type=str, default='', help="Method to use: FedCrypt or FedTracker")
+    parser.add_argument('--method', type=str, default='', help="Method to use: FedCrypt, FedTracker, FedIPR or Wholeaked")
     parser.add_argument('--encrypted', action='store_true', help="Use encrypted model")
     parser.add_argument('--plaintext', dest='encrypt', action='store_false',  help="Use plaintext model")
     parser.set_defaults(encrypt=True)

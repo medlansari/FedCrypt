@@ -140,6 +140,9 @@ following attacks :
 - Pruning
 - Overwriting
 
+## Other FL Watermarking Methods
+Our code supports seamless integration and benchmarking of various federated learning watermarking methods. In addition to FedCrypt, the framework includes implementations of state-of-the-art approaches such as FedTracker, FedIPR, and Yu et al. method. Each method can be selected via the --method flag and configured using dedicated YAML files in the configs/federated_learning/ directory. This design enables users to directly compare the performance of these methods with FedCrypt.
+
 ## Citation
 
 Cite as: Mohammed Lansari, Reda Bellafqira, Katarzyna Kapusta, et al. FedCrypt: A Dynamic White-Box Watermarking Scheme for Homomorphic Federated Learning. TechRxiv. July 16, 2024. 

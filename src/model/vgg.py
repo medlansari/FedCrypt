@@ -1,5 +1,6 @@
 import math
 
+import torch
 import torch.nn as nn
 
 __all__ = [
@@ -26,6 +27,7 @@ class VGG(nn.Module):
         super(VGG, self).__init__()
         self.features = features
         self.linear = linear
+        self.features_extraction = False
         if linear:
             self.in_features = 512 # 32768
             self.classifier = nn.Sequential(
@@ -61,9 +63,11 @@ class VGG(nn.Module):
                 m.weight.data.normal_(0, math.sqrt(2.0 / n))
                 m.bias.data.zero_()
 
-    def forward(self, x):
+    def forward(self, x, features_extraction=False):
         x = self.features(x)
         x = x.reshape(x.size(0), -1)
+        if features_extraction:
+            return x
         x = self.classifier(x)
         if not (self.linear):
             return self.last_layer(x)
@@ -190,3 +194,14 @@ class vgg_detector(nn.Module):
         z1 = self.fc1(x)
         z2 = self.activation(z1)
         return self.fc2(z2)
+
+class vgg_detector_feature(nn.Module):
+
+    def __init__(self, output_size=32):
+        super().__init__()
+        super().__init__()
+        self.fc1 = nn.Linear(512, output_size)
+        self.activation = torch.nn.Tanh()
+
+    def forward(self, x):
+        return self.activation(self.fc1(x))

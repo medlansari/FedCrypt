@@ -35,7 +35,7 @@ def accuracy(
 
             accumulate_loss += loss.item()
 
-    return round(correct / total, 3), round(accumulate_loss / len(loader), 3)
+    return round(correct / total, 4), round(accumulate_loss / len(loader), 4)
 
 
 def one_hot_encoding(y: torch.Tensor) -> torch.Tensor:
@@ -76,10 +76,10 @@ def watermark_detection_rate(
 
             accumulate_loss += loss.item()
 
-    return round(correct / total, 3), round(accumulate_loss / len(test_loader), 3)
+    return round(correct / total, 4), round(accumulate_loss / len(test_loader), 4)
 
 def watermark_detection_rate_black(
-    model: nn.Module, detector: nn.Module, test_loader: torch.utils.data.DataLoader
+    model: nn.Module, detector: nn.Module, test_loader: torch.utils.data.DataLoader, feature_extraction: bool = False
 ) -> tuple[float, float]:
     model.eval()
     detector.eval()
@@ -101,7 +101,7 @@ def watermark_detection_rate_black(
             outputs = one_hot_encoding(outputs)
 
             with torch.autocast(device_type="cuda"):
-                features_predicted = model(inputs)
+                features_predicted = model(inputs, features_extraction=feature_extraction)
                 outputs_predicted = detector(features_predicted)
 
                 loss = criterion(outputs_predicted, outputs)
@@ -112,7 +112,7 @@ def watermark_detection_rate_black(
 
             accumulate_loss += loss.item()
 
-    return round(correct / total, 3), round(accumulate_loss / len(test_loader), 3)
+    return round(correct / total, 4), round(accumulate_loss / len(test_loader), 4)
 
 
 def watermark_detection_rate_white(
@@ -150,8 +150,6 @@ def watermark_detection_rate_key(
             with torch.autocast(device_type="cuda"):
                 features_predicted = model(inputs)
                 outputs_predicted = detector(features_predicted)
-
-                loss = criterion(outputs_predicted, outputs)
 
             reconstructed_message = torch.where(outputs_predicted >= 0, 1, -1)
 

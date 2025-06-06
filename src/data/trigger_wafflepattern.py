@@ -38,7 +38,7 @@ class WafflePattern(Dataset):
             class_name = class_path.split("/")[-1]
             for img_path in glob.glob(class_path + "/*.png"):
                 if features:
-                    self.data.append([img_path, message])
+                    self.data.append([img_path, torch.argmax(message)])
                 else:
                     self.data.append([img_path, class_name])
 

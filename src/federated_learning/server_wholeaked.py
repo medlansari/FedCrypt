@@ -13,7 +13,8 @@ from src.data.data_splitter import data_splitter
 from src.data.trigger_wafflepattern import WafflePattern
 from src.federated_learning.aggregation import fedavg
 from src.federated_learning.client import Client
-from src.metric import accuracy, watermark_detection_rate, one_hot_encoding, watermark_detection_rate_key
+from src.metric import accuracy, watermark_detection_rate, one_hot_encoding, watermark_detection_rate_key, \
+    watermark_detection_rate_black
 from src.model.model_choice import model_choice
 from src.model.resnet import resnet_detector_feature
 from src.plot import plot_FHE
@@ -36,15 +37,15 @@ class Server_Wholeaked:
             self.dataset, self.nb_clients
         )
 
-        self.model, _, _ = model_choice(
-            self.model_name, self.input_size, self.num_classes_task, self.num_classes_watermarking
+        self.model, _, self.detector = model_choice(
+            self.model_name, self.input_size, self.num_classes_task, self.num_classes_watermarking, feature=True
         )
-        self.model.feature_extraction = True
-        self.detector = resnet_detector_feature()
+
         self.model.to(DEVICE)
         self.detector.to(DEVICE)
 
-        self.message = (torch.randint(2, (32,), device="cpu").float() - 0.5) * 2
+        self.message = torch.zeros((32,), device="cpu").float()
+        self.message[0] = 1.0  # Set the first element to 1.0 for the watermark message
 
         self.trigger_set = torch.utils.data.DataLoader(
             WafflePattern(RGB=True,features=True, message=self.message),
@@ -54,7 +55,7 @@ class Server_Wholeaked:
             pin_memory=True,
         )
         self.id = id
-        self.max_round = 10
+        self.max_round = 5
 
         print("Dataset :", dataset)
         print("Number of clients :", self.nb_clients)
@@ -123,7 +124,7 @@ class Server_Wholeaked:
 
             acc_watermark_black = 0
 
-            if r >= 3:
+            if r >= 20:
                 acc_watermark_black = self.encrypted_re_embedding(
                     lr_retrain, self.max_round
                 )
@@ -345,7 +346,7 @@ class Server_Wholeaked:
                 outputs = outputs.to(DEVICE)
 
                 with torch.autocast(device_type="cuda"):
-                    features_predicted = self.model(inputs)
+                    features_predicted = self.model(inputs, features_extraction=True)
 
                     outputs_predicted = self.detector(features_predicted)
 
@@ -386,8 +387,8 @@ class Server_Wholeaked:
 
         logger.log(logging.WATERMARK, "Re-Embedding")
 
-        acc_watermark_black_before, loss_bb = watermark_detection_rate_key(
-            self.model, self.detector, self.trigger_set
+        acc_watermark_black_before, loss_bb = watermark_detection_rate_black(
+            self.model, self.detector, self.trigger_set, feature_extraction=True
         )
 
         self.model.train()
@@ -422,7 +423,7 @@ class Server_Wholeaked:
                 outputs = outputs.to(DEVICE)
 
                 with torch.autocast(device_type="cuda"):
-                    features_predicted = self.model(inputs)
+                    features_predicted = self.model(inputs, features_extraction=True)
 
                     outputs_predicted = self.detector(features_predicted)
 
@@ -431,7 +432,7 @@ class Server_Wholeaked:
                     for param, param_original in zip(self.model.parameters(), model_original.parameters()):
                         diff += torch.sum((param - param_original) ** 2)
 
-                    loss = blackbox_loss + diff
+                    loss = blackbox_loss + (5e-1 * diff)
 
                 loss.backward()
 
@@ -439,8 +440,8 @@ class Server_Wholeaked:
 
                 accumulate_loss += loss.item()
 
-            acc_watermark_black, loss_watermark = watermark_detection_rate_key(
-                self.model, self.detector, self.trigger_set
+            acc_watermark_black, loss_watermark = watermark_detection_rate_black(
+                self.model, self.detector, self.trigger_set, feature_extraction=True
             )
 
             loop.set_description(f"Epoch [{epoch}/{max_round}]")

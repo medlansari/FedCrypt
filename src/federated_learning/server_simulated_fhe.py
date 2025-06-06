@@ -66,7 +66,7 @@ class Server_Simulated_FHE:
         self.detector.to(DEVICE)
 
         self.trigger_set = torch.utils.data.DataLoader(
-            WafflePattern(RGB=True, features=True),
+            WafflePattern(RGB=True, features=False),
             batch_size=10,
             shuffle=True,
             num_workers=NUM_WORKERS,

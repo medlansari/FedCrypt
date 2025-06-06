@@ -8,6 +8,7 @@ fl:
 
 watermarking:
   max_epochs:
-  lr_pretrain: [1e-2, 1e-1]
-  lr_retrain: [1e-2, 1e-1]
+  lr_pretrain: [1e-4, 1e-3]
+  lr_retrain: [1e-4, 1e-2]
+
 

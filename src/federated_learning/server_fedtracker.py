@@ -66,7 +66,8 @@ class Server_FedTracker:
         )
         self.model.to(DEVICE)
 
-        self.secret_key = torch.randn((512, 256), device="cuda")
+        torch.manual_seed(0)
+        self.secret_key = torch.randn((256, 256), device="cuda")
         self.message = (torch.randint(2, (256,), device="cuda").float() - 0.5) * 2
 
         self.id = id
@@ -185,6 +186,33 @@ class Server_FedTracker:
             + ".pth",
         )
 
+        torch.save(
+            self.message,
+            "./outputs/message_"
+            + self.model_name
+            + "_"
+            + str(nb_rounds)
+            + "_"
+            + str(MAX_EPOCH_CLIENT)
+            + "_FHE"
+            + "_"
+            + self.id
+            + ".pth",
+        )
+
+        torch.save(
+            self.secret_key,
+            "./outputs/message_"
+            + self.model_name
+            + "_"
+            + str(nb_rounds)
+            + "_"
+            + str(MAX_EPOCH_CLIENT)
+            + "_FHE"
+            + "_"
+            + self.id
+            + ".pth",
+        )
 
         logger.log(logging.INFO, "FL Training Done")
 

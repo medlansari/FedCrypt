@@ -42,7 +42,7 @@ class ResidualBlock(nn.Module):
 
 
 class ResNet(nn.Module):
-    def __init__(self, linear, features_extraction=False, num_classes=10):
+    def __init__(self, linear, num_classes=10, features_extraction=False):
         super(ResNet, self).__init__()
         self.linear = linear
         if linear:
@@ -78,7 +78,7 @@ class ResNet(nn.Module):
             self.inchannel = channels
         return nn.Sequential(*layers)
 
-    def forward(self, x):
+    def forward(self, x,features_extraction=False):
         out = self.conv1(x)
         out = self.layer1(out)
         out = self.layer2(out)
@@ -86,7 +86,7 @@ class ResNet(nn.Module):
         out = self.layer4(out)
         out = F.avg_pool2d(out, 4)
         out = out.view(out.size(0), -1)
-        if self.features_extraction:
+        if features_extraction:
             return out
         out = self.activation(self.classifier(out))
         if self.linear:
@@ -124,7 +124,7 @@ class resnet_detector_feature(nn.Module):
     def __init__(self, output_size=32):
         super().__init__()
         self.fc1 = nn.Linear(512, output_size)
-        self.activation = torch.tanh
+        self.activation = torch.nn.Tanh()
 
     def forward(self, x):
         return self.activation(self.fc1(x))
