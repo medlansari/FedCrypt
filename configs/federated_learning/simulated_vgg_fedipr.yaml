@@ -1,3 +1,5 @@
+method: "FedIPR"
+
 model: "VGG"
 dataset: "CIFAR10"
 

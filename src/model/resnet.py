@@ -68,7 +68,7 @@ class ResNet(nn.Module):
             nn.Identity(),
             nn.Linear(512, 128),
         )
-        self.fc = nn.Linear(128, num_classes)
+        self.last_layer = nn.Linear(128, num_classes)
 
     def make_layer(self, block, channels, num_blocks, stride):
         strides = [stride] + [1] * (num_blocks - 1)
@@ -91,7 +91,7 @@ class ResNet(nn.Module):
         out = self.activation(self.classifier(out))
         if self.linear:
             return out
-        out = self.fc(out)
+        out = self.last_layer(out)
         return out
 
     def trainable(self):

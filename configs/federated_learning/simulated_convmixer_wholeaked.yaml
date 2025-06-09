@@ -1,3 +1,5 @@
+method: "WhoLeaked"
+
 model: "ConvMixer"
 dataset: "CIFAR100"
 

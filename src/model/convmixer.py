@@ -56,7 +56,7 @@ class ConvMixer(nn.Module):
             nn.Identity(),
             nn.Linear(dim, 128),
         )
-        self.fc = nn.Linear(128, n_classes)
+        self.last_layer = nn.Linear(128, n_classes)
 
 
     def forward(self, x, features_extraction=False):
@@ -73,7 +73,7 @@ class ConvMixer(nn.Module):
         if self.linear:
             return x
         x = self.activation(x)
-        x = self.fc(x)
+        x = self.last_layer(x)
         return x
 
     def trainable(self):

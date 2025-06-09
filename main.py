@@ -12,7 +12,6 @@ from src.federated_learning.server_wholeaked import Server_Wholeaked
 def main():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--method', type=str, default='', help="Method to use: FedCrypt, FedTracker, FedIPR or Wholeaked")
     parser.add_argument('--encrypted', action='store_true', help="Use encrypted model")
     parser.add_argument('--plaintext', dest='encrypt', action='store_false',  help="Use plaintext model")
     parser.set_defaults(encrypt=True)
@@ -25,7 +24,7 @@ def main():
 
     id = str(time()) + "_" + configFl["model"] + "_" + configFl["dataset"] + "_" + args.method
 
-    match args.method:
+    match configFl["method"]:
         case "FedCrypt":
 
             if args.encrypted:
@@ -59,6 +58,15 @@ def main():
 
             print("----> Dynamic Watermarking using Wholeaked <----\n")
             server = Server_Wholeaked(configFl["model"], configFl["dataset"], configFl["fl"]["nb_clients"], id)
+            server.train(configFl["fl"]["max_round"], float(configFl["fl"]["lr_clients"]),
+                         tuple(map(float, configFl["watermarking"]["lr_pretrain"])),
+                         tuple(map(float, configFl["watermarking"]["lr_retrain"])))
+
+        case "ClassHidden":
+
+            print("----> Dynamic Watermarking using ClassHidden <----\n")
+            from src.federated_learning.server_classhidden import Server_Classhidden
+            server = Server_Classhidden(configFl["model"], configFl["dataset"], configFl["fl"]["nb_clients"], id)
             server.train(configFl["fl"]["max_round"], float(configFl["fl"]["lr_clients"]),
                          tuple(map(float, configFl["watermarking"]["lr_pretrain"])),
                          tuple(map(float, configFl["watermarking"]["lr_retrain"])))

@@ -1,3 +1,5 @@
+method: "FedTracker"
+
 model: "ConvMixer"
 dataset: "CIFAR100"
 

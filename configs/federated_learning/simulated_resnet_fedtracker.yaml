@@ -1,3 +1,5 @@
+method: "FedTracker"
+
 model: "ResNet"
 dataset: "MNIST"
 

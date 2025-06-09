@@ -1,3 +1,5 @@
+method: "FedIPR"
+
 model: "ConvMixer"
 dataset: "CIFAR100"
 

@@ -65,7 +65,8 @@ class Server_FedIPR:
         self.model.to(DEVICE)
 
         torch.manual_seed(0)
-        self.secret_key = torch.randn((256, 256), device="cuda")
+        dim_key = self.model.classifier[4].weight.shape[1]
+        self.secret_key = torch.randn((dim_key, 256), device="cuda")
         self.message = (torch.randint(2, (256,), device="cuda").float() - 0.5) * 2
 
         self.id = id

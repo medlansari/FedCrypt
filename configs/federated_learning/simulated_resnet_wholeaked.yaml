@@ -1,3 +1,5 @@
+method: "WhoLeaked"
+
 model: "ResNet"
 dataset: "MNIST"
 

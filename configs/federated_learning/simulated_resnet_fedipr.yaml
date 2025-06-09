@@ -1,3 +1,5 @@
+method: "FedIPR"
+
 model: "ResNet"
 dataset: "MNIST"
 

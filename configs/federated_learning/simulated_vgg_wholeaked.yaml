@@ -1,3 +1,5 @@
+method: "WhoLeaked"
+
 model: "VGG"
 dataset: "CIFAR10"
 
