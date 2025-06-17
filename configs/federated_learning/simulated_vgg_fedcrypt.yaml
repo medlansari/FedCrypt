@@ -10,5 +10,5 @@ fl:
 
 watermarking:
   lr_pretrain: [1e-3, 1e-2]
-  lr_retrain: [1e-3, 1e-2]
+  lr_retrain: [1e-3, 1e-1]
 

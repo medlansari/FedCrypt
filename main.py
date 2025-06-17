@@ -22,7 +22,7 @@ def main():
 
     configFl = yaml.safe_load(open(args.cfgFl, 'r'))
 
-    id = str(time()) + "_" + configFl["model"] + "_" + configFl["dataset"] + "_" + args.method
+    id = str(time()) + "_" + configFl["model"] + "_" + configFl["dataset"] + "_" + configFl["method"]
 
     match configFl["method"]:
         case "FedCrypt":
@@ -54,7 +54,7 @@ def main():
                          tuple(map(float, configFl["watermarking"]["lr_pretrain"])),
                          tuple(map(float, configFl["watermarking"]["lr_retrain"])))
 
-        case "Wholeaked":
+        case "WhoLeaked":
 
             print("----> Dynamic Watermarking using Wholeaked <----\n")
             server = Server_Wholeaked(configFl["model"], configFl["dataset"], configFl["fl"]["nb_clients"], id)
@@ -70,6 +70,9 @@ def main():
             server.train(configFl["fl"]["max_round"], float(configFl["fl"]["lr_clients"]),
                          tuple(map(float, configFl["watermarking"]["lr_pretrain"])),
                          tuple(map(float, configFl["watermarking"]["lr_retrain"])))
+
+        case _:
+            print("----> Unrecognized Method <----\n")
 
 if __name__ == "__main__":
     main()

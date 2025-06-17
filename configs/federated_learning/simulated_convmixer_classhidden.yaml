@@ -1,4 +1,4 @@
-method: "FedCrypt"
+method: "ClassHidden"
 
 model: "ConvMixer"
 dataset: "CIFAR100"

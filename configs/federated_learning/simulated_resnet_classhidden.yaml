@@ -1,4 +1,4 @@
-method: "FedCrypt"
+method: "ClassHidden"
 
 model: "ResNet"
 dataset: "MNIST"
