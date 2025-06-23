@@ -297,12 +297,7 @@ class Server_Simulated_FHE:
 
             lr_client = lr_client * 0.99
 
-        np.savez(
-            "./outputs/save_" + "FHE_overwriting" + "_" + self.id + "_" + str(time()),
-            acc_test_list,
-            acc_watermark_org_list,
-            acc_watermark_new_list,
-        )
+        np.savez(f"./outputs/overwriting_{id}.pth", acc_test_list, acc_watermark_org_list, acc_watermark_new_list)
 
         torch.save(
             self.model.state_dict(),

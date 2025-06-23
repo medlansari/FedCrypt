@@ -19,7 +19,7 @@ from src.setting import (
 
 def data_splitter(
     dataset: str, nb_clients: int
-) -> tuple[list[torch.utils.data.DataLoader], np.array, torch.utils.data.DataLoader]:
+):
     """
     Splits the specified dataset into subsets for each client.
 

@@ -5,6 +5,7 @@ import yaml
 from src.federated_learning.server_fedipr import Server_FedIPR
 from src.federated_learning.server_fedtracker import Server_FedTracker
 from src.federated_learning.server_real_fhe import Server_Real_FHE
+from src.federated_learning.server_classhidden import Server_Classhidden
 from src.federated_learning.server_simulated_fhe import Server_Simulated_FHE
 from src.federated_learning.server_wholeaked import Server_Wholeaked
 
@@ -65,7 +66,6 @@ def main():
         case "ClassHidden":
 
             print("----> Dynamic Watermarking using ClassHidden <----\n")
-            from src.federated_learning.server_classhidden import Server_Classhidden
             server = Server_Classhidden(configFl["model"], configFl["dataset"], configFl["fl"]["nb_clients"], id)
             server.train(configFl["fl"]["max_round"], float(configFl["fl"]["lr_clients"]),
                          tuple(map(float, configFl["watermarking"]["lr_pretrain"])),

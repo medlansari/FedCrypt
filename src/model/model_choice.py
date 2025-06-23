@@ -22,7 +22,7 @@ def model_choice(model: str, input_size, num_classes, num_classes_watermarking, 
         return init_vgg(num_classes), init_vgg(num_classes)
     elif model == "ConvMixer":
         if feature:
-            detector= convmixer_detector_feature(num_classes_watermarking)
+            detector = convmixer_detector_feature(num_classes_watermarking)
         else:
             detector = convmixer_detector(num_classes_watermarking)
         return convmixer(linear=False, num_classes=num_classes), convmixer(linear=True, num_classes=num_classes), detector

@@ -89,6 +89,13 @@ class Client:
 
         acc_test, acc_loss = accuracy(self.model, test_loader)
 
+        print(
+            "Initial accuracy: ",
+            acc_test,
+            "Initial loss: ",
+            acc_loss,
+        )
+
         test_array.append(acc_test)
 
         acc_watermark, loss_watermark = watermark_detection_rate(
@@ -110,6 +117,8 @@ class Client:
             accumulate_loss = 0
 
             for inputs, outputs in self.train_set:
+                optimizer.zero_grad(set_to_none=True)
+
                 inputs = inputs.to(DEVICE, memory_format=torch.channels_last)
 
                 outputs = outputs.to(DEVICE)
@@ -125,25 +134,29 @@ class Client:
 
                 optimizer.step()
 
-                optimizer.zero_grad(set_to_none=True)
+            if epoch % 20 == 0:
 
-            acc_test, acc_loss = accuracy(self.model, test_loader)
+                acc_test, acc_loss = accuracy(self.model, test_loader)
 
-            test_array.append(acc_test)
+                test_array.append(acc_test)
 
-            self.model_linear.load_state_dict(self.model.state_dict())
+                self.model_linear.load_state_dict(self.model.state_dict())
 
-            acc_watermark, loss_watermark = watermark_detection_rate(
-                self.model_linear, detector, trigger_loader
-            )
+                acc_watermark, loss_watermark = watermark_detection_rate(
+                    self.model_linear, detector, trigger_loader
+                )
 
-            print(
-                f"\rEpoch: {epoch}, Acc : {acc_test}, WDR : {acc_watermark}",
-                end="",
-                flush=True,
-            )
+                print(
+                    f"\rEpoch: {epoch}, Acc : {acc_test}, WDR : {acc_watermark}",
+                    end="",
+                    flush=True,
+                )
 
-            watermark_array.append(acc_watermark)
+                watermark_array.append(acc_watermark)
+
+                self.model.train()
+
+        print(" ")
 
         return test_array, watermark_array
 

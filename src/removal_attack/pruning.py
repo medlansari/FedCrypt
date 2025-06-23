@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 import numpy as np
 import torch
 import torch.nn.utils.prune as prune
@@ -6,12 +8,23 @@ from torch import nn
 from src.data.data_splitter import data_splitter
 from src.data.trigger_wafflepattern import WafflePattern
 from src.federated_learning.server_simulated_fhe import Server_Simulated_FHE
-from src.metric import accuracy, watermark_detection_rate
-from src.model.vgg import Detector
+from src.metric import accuracy, watermark_detection_rate, watermark_detection_rate_white
+from src.model.model_choice import model_choice
 from src.plot import plot_pruning_attack
-from src.setting import NUM_WORKERS
+from src.setting import NUM_WORKERS, DEVICE
 
 path = "outputs"
+
+def pruning(method, model_name, dataset, id):
+    match method:
+        case "FedCrypt":
+            pruning_fedcrypt(model_name, dataset, id)
+        case "FedIPR":
+            pruning_white_box(model_name, dataset,id)
+        case "FedTracker":
+            pruning_white_box(model_name, dataset, id)
+        case _:
+            raise NotImplementedError
 
 
 def get_children(model: torch.nn.Module) -> list[torch.nn.Module]:
@@ -28,7 +41,7 @@ def get_children(model: torch.nn.Module) -> list[torch.nn.Module]:
     return flatt_children
 
 
-def pruning(model, percentage_to_remove) -> None:
+def apply_pruning(model, percentage_to_remove) -> None:
     parameters_to_prune = []
 
     for layer in get_children(model):
@@ -46,49 +59,107 @@ def pruning(model, percentage_to_remove) -> None:
             prune.remove(layer, "weight")
 
 
-def pruning_attack(ids: list[str]) -> None:
-    train_subsets, subset_size, test_set = data_splitter("CIFAR10", 1)
+def pruning_fedcrypt(model_name, dataset, id) -> None:
+    train_subsets, subset_size, test_set, num_classes_task = data_splitter(
+        dataset, 10
+    )
+
+    model, model_linear, detector = model_choice(model_name, 32 * 32, num_classes_task, num_classes_task)
+    model.load_state_dict(torch.load(f"{path}/save_{id}.pth"))
+    model.to(DEVICE)
+
+    model_linear.load_state_dict(torch.load(f"{path}/save_{id}.pth"))
+    model_linear.to(DEVICE)
+
+    detector.load_state_dict(torch.load(f"{path}/detector_{id}.pth"))
+    detector.to(DEVICE)
+
 
     trigger_set = torch.utils.data.DataLoader(
-        WafflePattern(RGB=True, features=True),
+        WafflePattern(RGB=True, features=False),
         batch_size=10,
         shuffle=True,
         num_workers=NUM_WORKERS,
         pin_memory=True,
     )
 
+    acc_watermark, loss_watermark = watermark_detection_rate(
+        model_linear, detector, trigger_set
+    )
+
+    print(
+        "Initial watermark detection rate: ",
+        acc_watermark,
+        "Initial watermark loss: ",
+        loss_watermark,
+    )
+
     test_accuracy = []
-    wdr_dynamic = []
+    wsr = []
 
-    for id in ids:
+    pruning_rates = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
 
-        pruning_rates = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+    original_model = deepcopy(model)
 
-        for p in pruning_rates:
-            Server = Server_Simulated_FHE("VGG", "CIFAR10", 10, id)
+    for p in pruning_rates:
+        model.load_state_dict(original_model.state_dict())
 
-            Server.model.load_state_dict(torch.load(path + "/save_" + id + ".pth"))
+        apply_pruning(model, p)
 
-            pruning(Server.model, p)
+        model_linear.load_state_dict(model.state_dict())
 
-            Server.model_linear.load_state_dict(Server.model.state_dict())
+        test_accuracy.append(accuracy(model, test_set))
+        wsr_acc, wsr_loss = watermark_detection_rate(model_linear, detector, trigger_set)
 
-            detector = Detector(10)
-            detector.load_state_dict(torch.load(path + "/detector_" + id + ".pth"))
-            detector.to("cuda")
+        wsr.append((wsr_acc,wsr_loss))
 
-            test_tmp = accuracy(Server.model, test_set)[0]
-            dynamic_tmp, loss = watermark_detection_rate(
-                Server.model_linear, detector, trigger_set
-            )
+    np.savez(f"{path}/pruning_{id}.pth", test_accuracy, wsr)
 
-            test_accuracy.append(test_tmp)
-            wdr_dynamic.append(dynamic_tmp)
 
-    test_accuracy = np.array(test_accuracy).reshape(-1, len(pruning_rates))
-    wdr_dynamic = np.array(wdr_dynamic).reshape(-1, len(pruning_rates))
+def pruning_white_box(
+    model_name: str,
+    dataset: str,
+    id: str
+) -> tuple[list[float], list[float]]:
 
-    print(test_accuracy)
-    print(wdr_dynamic)
+    train_subsets, subset_size, test_set, num_classes_task = data_splitter(
+            dataset, 10
+    )
 
-    plot_pruning_attack(pruning_rates, test_accuracy, wdr_dynamic)
+    model, _, _ = model_choice(model_name, 32 * 32, num_classes_task, num_classes_task)
+    model.load_state_dict(torch.load(f"{path}/save_{id}.pth"))
+    model.to(DEVICE)
+
+    torch.manual_seed(0)
+    dim_key = model.classifier[4].weight.shape[1]
+    secret_key = torch.randn((dim_key, 256), device="cuda")
+    message = (torch.randint(2, (256,), device="cuda").float() - 0.5) * 2
+
+    acc_watermark, loss_watermark = watermark_detection_rate_white(
+        model, secret_key, message
+    )
+
+    print(
+        "Initial watermark detection rate: ",
+        acc_watermark,
+        "Initial watermark loss: ",
+        loss_watermark,
+    )
+
+    test_accuracy = []
+    wdr = []
+
+    pruning_rates = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+
+    original_model = deepcopy(model)
+
+    for p in pruning_rates:
+
+        model.load_state_dict(original_model.state_dict())
+
+        apply_pruning(model, p)
+
+        test_accuracy.append(accuracy(model, test_set))
+        wdr.append(watermark_detection_rate_white(model, secret_key, message))
+
+    np.savez(f"{path}/pruning_{id}.pth", test_accuracy, wdr)
