@@ -47,7 +47,7 @@ class Server_FedTracker:
             TODO
     """
 
-    def __init__(self, model: str, dataset: str, nb_clients: int, id: str):
+    def __init__(self, model: str, dataset: str, nb_clients: int, distribution: str, id: str):
 
         logger.log(logging.INFO, "Server Initialization")
 
@@ -58,7 +58,7 @@ class Server_FedTracker:
         self.input_size = 32 * 32
 
         self.train_subsets, self.subset_size, self.test_set, self.num_classes_task = data_splitter(
-            self.dataset, self.nb_clients
+            self.dataset, self.nb_clients, distribution
         )
 
         self.model, _, _ = model_choice(

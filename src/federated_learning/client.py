@@ -28,7 +28,7 @@ class Client:
         num_classes,
         train_set: torch.utils.data.DataLoader,
     ):
-        self.model, self.model_linear, _ = model_choice(model, input_size, num_classes, 1)
+        self.model, self.model_linear, _ = model_choice(model, input_size, num_classes, 100)
         self.model.load_state_dict(weights)
         self.model_linear.load_state_dict(weights)
         self.model.to(DEVICE)

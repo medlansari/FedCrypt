@@ -2,6 +2,7 @@ method: "ClassHidden"
 
 model: "VGG"
 dataset: "CIFAR10"
+distribution: "NON-IID"
 
 fl:
   max_round: 80

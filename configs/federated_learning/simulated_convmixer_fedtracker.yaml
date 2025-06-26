@@ -2,6 +2,7 @@ method: "FedTracker"
 
 model: "ConvMixer"
 dataset: "CIFAR100"
+distribution: "NON-IID"
 
 fl:
   max_round: 80

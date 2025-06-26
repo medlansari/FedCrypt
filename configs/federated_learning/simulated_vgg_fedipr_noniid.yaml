@@ -2,14 +2,14 @@ method: "FedIPR"
 
 model: "VGG"
 dataset: "CIFAR10"
-distribution: "IID"
+distribution: "NON-IID"
 
 fl:
   max_round: 80
   nb_clients: 10
-  lr_clients: 1e-2
+  lr_clients: 1e-4
 
 watermarking:
-  lr_pretrain: [1e-3, 1e-2]
-  lr_retrain: [1e-3, 1e-2]
+  lr_pretrain: [1e-5, 1e-4]
+  lr_retrain: [1e-5, 1e-4]
 

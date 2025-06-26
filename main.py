@@ -36,13 +36,13 @@ def main():
 
             else:
                 print("----> Dynamic Watermarking using Simulated FHE <----\n")
-                server = Server_Simulated_FHE(configFl["model"], configFl["dataset"], configFl["fl"]["nb_clients"], id)
+                server = Server_Simulated_FHE(configFl["model"], configFl["dataset"], configFl["fl"]["nb_clients"], configFl["distribution"], id)
                 server.train(configFl["fl"]["max_round"], float(configFl["fl"]["lr_clients"]), tuple(map(float,configFl["watermarking"]["lr_pretrain"])), tuple(map(float,configFl["watermarking"]["lr_retrain"])))
 
         case "FedTracker":
 
             print("----> Dynamic Watermarking using FedTracker <----\n")
-            server = Server_FedTracker(configFl["model"], configFl["dataset"], configFl["fl"]["nb_clients"], id)
+            server = Server_FedTracker(configFl["model"], configFl["dataset"], configFl["fl"]["nb_clients"], configFl["distribution"], id)
             server.train(configFl["fl"]["max_round"], float(configFl["fl"]["lr_clients"]),
                  tuple(map(float, configFl["watermarking"]["lr_pretrain"])),
                  tuple(map(float, configFl["watermarking"]["lr_retrain"])))
@@ -50,7 +50,7 @@ def main():
         case "FedIPR":
 
             print("----> Dynamic Watermarking using FedIPR <----\n")
-            server = Server_FedIPR(configFl["model"], configFl["dataset"], configFl["fl"]["nb_clients"], id)
+            server = Server_FedIPR(configFl["model"], configFl["dataset"], configFl["fl"]["nb_clients"], configFl["distribution"], id)
             server.train(configFl["fl"]["max_round"], float(configFl["fl"]["lr_clients"]),
                          tuple(map(float, configFl["watermarking"]["lr_pretrain"])),
                          tuple(map(float, configFl["watermarking"]["lr_retrain"])))
@@ -66,7 +66,7 @@ def main():
         case "ClassHidden":
 
             print("----> Dynamic Watermarking using ClassHidden <----\n")
-            server = Server_Classhidden(configFl["model"], configFl["dataset"], configFl["fl"]["nb_clients"], id)
+            server = Server_Classhidden(configFl["model"], configFl["dataset"], configFl["fl"]["nb_clients"], configFl["distribution"], id)
             server.train(configFl["fl"]["max_round"], float(configFl["fl"]["lr_clients"]),
                          tuple(map(float, configFl["watermarking"]["lr_pretrain"])),
                          tuple(map(float, configFl["watermarking"]["lr_retrain"])))

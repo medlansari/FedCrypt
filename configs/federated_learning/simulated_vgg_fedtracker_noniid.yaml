@@ -2,7 +2,7 @@ method: "FedTracker"
 
 model: "VGG"
 dataset: "CIFAR10"
-distribution: "IID"
+distribution: "NON-IID"
 
 fl:
   max_round: 80

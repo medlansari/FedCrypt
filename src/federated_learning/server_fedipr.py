@@ -45,7 +45,7 @@ class Server_FedIPR:
             TODO
     """
 
-    def __init__(self, model: str, dataset: str, nb_clients: int, id: str):
+    def __init__(self, model: str, dataset: str, nb_clients: int, distribution: str, id: str):
 
         logger.log(logging.INFO, "Server Initialization")
 
@@ -56,7 +56,7 @@ class Server_FedIPR:
         self.input_size = 32 * 32
 
         self.train_subsets, self.subset_size, self.test_set, self.num_classes_task = data_splitter(
-            self.dataset, self.nb_clients
+            self.dataset, self.nb_clients, distribution
         )
 
         self.model, _, _ = model_choice(
@@ -309,7 +309,7 @@ class Server_FedIPR:
 
         torch.save(
             self.model.state_dict(),
-            "./outputs/save_"
+            "./outputs/save_overwriting_"
             + str(nb_rounds)
             + "_"
             + str(MAX_EPOCH_CLIENT)
@@ -321,7 +321,7 @@ class Server_FedIPR:
 
         torch.save(
             self.detector.state_dict(),
-            "./outputs/detector_"
+            "./outputs/detector_overwriting_"
             + str(nb_rounds)
             + "_"
             + str(MAX_EPOCH_CLIENT)

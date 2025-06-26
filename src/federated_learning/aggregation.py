@@ -33,6 +33,7 @@ def fedavg(
             server_dict[name_server].zero_()
 
             for idx, client in enumerate(clients):
+
                 if client.model.state_dict()[name_server].dtype is torch.long:
                     weight = (
                         subset_size[idx] / subset_size_sum

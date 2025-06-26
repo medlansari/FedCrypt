@@ -25,7 +25,7 @@ from src.setting import DEVICE, NUM_WORKERS, PRCT_TO_SELECT, MAX_EPOCH_CLIENT
 
 class Server_Classhidden:
 
-    def __init__(self, model: str, dataset: str, nb_clients: int, id: str):
+    def __init__(self, model: str, dataset: str, nb_clients: int, distribution: str, id: str):
 
         logger.log(logging.INFO, "Server Initialization")
 
@@ -41,7 +41,7 @@ class Server_Classhidden:
             self.rgb = True
 
         self.train_subsets, self.subset_size, self.test_set, self.num_classes_task = data_splitter(
-            self.dataset, self.nb_clients
+            self.dataset, self.nb_clients, distribution
         )
 
         self.model, _, _ = model_choice(
@@ -147,20 +147,6 @@ class Server_Classhidden:
         torch.save(
             self.model.state_dict(),
             "./outputs/save_"
-            + self.model_name
-            + "_"
-            + str(nb_rounds)
-            + "_"
-            + str(MAX_EPOCH_CLIENT)
-            + "_FHE"
-            + "_"
-            + self.id
-            + ".pth",
-        )
-
-        torch.save(
-            self.detector.state_dict(),
-            "./outputs/detector_"
             + self.model_name
             + "_"
             + str(nb_rounds)

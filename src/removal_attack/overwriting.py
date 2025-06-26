@@ -3,6 +3,7 @@ from copy import deepcopy
 import numpy as np
 import torch
 from torch import optim, nn
+import random
 
 from src.data.data_splitter import data_splitter
 from src.data.trigger_pgd import PGDSet
@@ -30,7 +31,7 @@ def overwriting_fedcrypt(model_name, dataset, epoch, id):
         dataset, 10
     )
 
-    model, model_linear, detector = model_choice(model_name, 32 * 32, num_classes_task, num_classes_task)
+    model, model_linear, detector = model_choice(model_name, 32 * 32, num_classes_task, 10)
     model.load_state_dict(torch.load(f"{path}/save_{id}.pth"))
     model.to(DEVICE)
 
@@ -58,21 +59,35 @@ def overwriting_fedcrypt(model_name, dataset, epoch, id):
 
     original_detector = deepcopy(detector)
 
-    Server = Server_Simulated_FHE(model_name, "CIFAR10", 10, id)
+    Server = Server_Simulated_FHE(model_name, dataset, 10, id)
 
     Server.trigger_set = new_watermark_set
 
-    Server.model.load_state_dict(torch.load(path + "/save_" + id + ".pth"))
-    Server.model_linear.load_state_dict(torch.load(path + "/save_" + id + ".pth"))
+    Server.model = deepcopy(model)
+    Server.model_linear = deepcopy(model_linear)
 
-    Server.train_overwriting(
-        original_watermark_set,
-        original_detector,
-        epoch,
-        1e-3,
-        (1e-2, 1e-1),
-        (1e-2, 1e-1),
-    )
+    if dataset == "CIFAR100":
+
+        Server.train_overwriting(
+            original_watermark_set,
+            original_detector,
+            epoch,
+            1e-3,
+            (1e-3, 1e-2),
+            (1e-3, 1e-2),
+        )
+
+    else:
+
+        Server.train_overwriting(
+            original_watermark_set,
+            original_detector,
+            epoch,
+            1e-3,
+            (1e-2, 1e-1),
+            (1e-2, 1e-1),
+        )
+
 
 
 
@@ -83,7 +98,7 @@ def overwriting_white_box(
 id: str) -> None:
 
     train_subsets, subset_size, test_set, num_classes_task = data_splitter(
-        dataset, 1
+        dataset, 10
     )
 
     train_loader = train_subsets[0]
@@ -98,8 +113,10 @@ id: str) -> None:
     secret_key = torch.randn((dim_key, 256), device="cuda")
     message = (torch.randint(2, (256,), device="cuda").float() - 0.5) * 2
 
-    torch.manual_seed(5)
-    secret_key_attack = torch.randn((dim_key, 256), device="cuda")
+    seed = random.randint(0, 2 ** 32 - 1)
+    torch.manual_seed(seed)
+    # secret_key_attack = torch.randint(-2,2, (dim_key, 256), device="cuda").float()
+    secret_key_attack = torch.normal(mean=0, std=0.15, size=(dim_key, 256),device="cuda")
     message_attack = (torch.randint(2, (256,), device="cuda").float() - 0.5) * 2
 
     optimizer = optim.SGD(model.parameters(), lr=1e-4)
@@ -128,16 +145,21 @@ id: str) -> None:
         loss_watermark,
     )
 
-    acc_watermark, loss_watermark = watermark_detection_rate_white(
+    acc_watermark_attack, loss_watermark_attack = watermark_detection_rate_white(
         model, secret_key_attack, message_attack
     )
 
     print(
         "Initial watermark detection rate for attacker: ",
-        acc_watermark,
+        acc_watermark_attack,
         "Initial watermark loss for attacker: ",
-        loss_watermark,
+        loss_watermark_attack,
     )
+
+    print(" ")
+
+    wsr.append(acc_watermark)
+    wsr_attack.append(acc_watermark_attack)
 
     model.train()
 
@@ -156,8 +178,7 @@ id: str) -> None:
 
                 reconstructed_message = model.classifier[4].weight.mean(0) @ secret_key_attack
 
-                loss = criterion(outputs_predicted, outputs) + (5e1 * (
-                criterion_watermarking(reconstructed_message, message_attack)))
+                loss = criterion(outputs_predicted, outputs) + (1e2 * (criterion_watermarking(reconstructed_message, message_attack)))
 
             loss.backward()
 
@@ -165,7 +186,7 @@ id: str) -> None:
 
             optimizer.step()
 
-        if epoch % 20 == 0:
+        if epoch % 10 == 0 and epoch != 0:
 
             acc_test, acc_loss = accuracy(model, test_loader)
 
@@ -188,4 +209,4 @@ id: str) -> None:
             wsr.append(acc_watermark)
             wsr_attack.append(acc_watermark_attack)
 
-    np.savez(f"{path}/overwriting_{id}.pth", test_accuracy, wsr, wsr_attack)
+    np.savez(f"{path}/overwriting_{id}", test_accuracy, wsr, wsr_attack)

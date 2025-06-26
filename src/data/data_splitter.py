@@ -4,6 +4,7 @@ import torchvision
 from torch.utils.data import random_split, Subset
 
 from src.data.dataset_covid import Covid_dataset
+from src.data.non_iid import distribute_non_iid_data
 from src.setting import (
     NUM_WORKERS,
     BATCH_SIZE_CLIENT,
@@ -18,12 +19,13 @@ from src.setting import (
 
 
 def data_splitter(
-    dataset: str, nb_clients: int
+    dataset: str, nb_clients: int, distrib: str = "IID"
 ):
     """
     Splits the specified dataset into subsets for each client.
 
     Args:
+        distrib:
         dataset (str): The name of the dataset to split. Currently supports "CIFAR10", "MNIST", and "MNIST2".
         nb_clients (int): The number of clients to split the dataset for.
 
@@ -200,43 +202,84 @@ def data_splitter(
             raise ValueError(f"Dataset '{dataset}' not found.")
 
 
-    subsets_loader = []
+    distrib = "NON-IID"
 
-    subsets_size = int(len(train_set) / nb_clients)
+    print("NON IID ######################################################################################")
 
-    if len(train_set) % nb_clients:
-        extra = len(train_set) % nb_clients
-        # train_set.data, train_set.targets = (
-        #     train_set.data[:-extra],
-        #     train_set.targets[:-extra],
-        # )
-        indices = list(range(len(train_set) - extra))
-        train_set = Subset(train_set, indices)
+    match distrib:
 
-    subset_size = [subsets_size for i in range(nb_clients)]
+        case "IID":
 
-    generator1 = torch.Generator().manual_seed(42)
+            subsets_loader = []
 
-    for i, subset_loader in enumerate(
-        torch.utils.data.random_split(
-            train_set,
-            [subsets_size for _ in range(nb_clients)],
-            generator=generator1,
-        )
-    ):
-        subsets_loader.append(
-            torch.utils.data.DataLoader(
-                subset_loader,
-                batch_size=batch_size,
-                shuffle=True,
-                drop_last=True,
-                num_workers=NUM_WORKERS,
-                pin_memory=True,
-            )
-        )
+            subsets_size = int(len(train_set) / nb_clients)
+
+            if len(train_set) % nb_clients:
+                extra = len(train_set) % nb_clients
+                # train_set.data, train_set.targets = (
+                #     train_set.data[:-extra],
+                #     train_set.targets[:-extra],
+                # )
+                indices = list(range(len(train_set) - extra))
+                train_set = Subset(train_set, indices)
+
+            subset_size = [subsets_size for i in range(nb_clients)]
+
+            generator1 = torch.Generator().manual_seed(42)
+
+            for i, subset_loader in enumerate(
+                torch.utils.data.random_split(
+                    train_set,
+                    [subsets_size for _ in range(nb_clients)],
+                    generator=generator1,
+                )
+            ):
+                subsets_loader.append(
+                    torch.utils.data.DataLoader(
+                        subset_loader,
+                        batch_size=batch_size,
+                        shuffle=True,
+                        drop_last=True,
+                        num_workers=NUM_WORKERS,
+                        pin_memory=True,
+                    )
+                )
+
+        case "NON-IID":
+
+            _, subsets_size  = distribute_non_iid_data(train_set, nb_clients, 1, TRANSFORM_TRAIN)
+
+            indices = list(range(sum(subsets_size)))
+            train_set = Subset(train_set, indices)
+
+            generator1 = torch.Generator().manual_seed(42)
+
+            subsets_loader = []
+
+            for i, subset_loader in enumerate(
+                    torch.utils.data.random_split(
+                        train_set,
+                        subsets_size,
+                        generator=generator1,
+                    )
+            ):
+                subsets_loader.append(
+                    torch.utils.data.DataLoader(
+                        subset_loader,
+                        batch_size=batch_size,
+                        shuffle=True,
+                        drop_last=True,
+                        num_workers=NUM_WORKERS,
+                        pin_memory=True,
+                    )
+                )
+
+        case _:
+
+            raise ValueError(f"Distribution '{distrib}' not found.")
 
     print("Size of the train set for each client :", subsets_size)
 
     print("Size of the test set :", len(test_set), "\n")
 
-    return subsets_loader, np.array(subset_size), test_loader, num_classes
+    return subsets_loader, np.array(subsets_size), test_loader, num_classes

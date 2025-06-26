@@ -13,7 +13,7 @@ from src.model.model_choice import model_choice
 from src.plot import plot_pruning_attack
 from src.setting import NUM_WORKERS, DEVICE
 
-path = "outputs"
+path = "outputs/CIFAR10"
 
 def pruning(method, model_name, dataset, id):
     match method:

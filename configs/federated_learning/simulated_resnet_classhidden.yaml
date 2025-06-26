@@ -2,6 +2,7 @@ method: "ClassHidden"
 
 model: "ResNet"
 dataset: "MNIST"
+distribution: "NON-IID"
 
 fl:
   max_round: 80
