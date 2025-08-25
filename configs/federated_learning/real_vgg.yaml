@@ -1,5 +1,6 @@
 model: "VGG_encrypted"
 dataset: "CIFAR10"
+method: "FedCrypt"
 
 fl:
   max_round: 80

@@ -22,6 +22,8 @@ def fedavg(
     Returns:
         None: The function updates the server model's weights in place.
     """
+
+    print(subset_size)
     subset_size = subset_size[selected_clients]
     clients = clients[selected_clients]
     subset_size_sum = sum(subset_size)

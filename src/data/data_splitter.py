@@ -202,17 +202,18 @@ def data_splitter(
             raise ValueError(f"Dataset '{dataset}' not found.")
 
 
-    distrib = "NON-IID"
+    # distrib = "NON-IID"
 
-    print("NON IID ######################################################################################")
 
     match distrib:
 
         case "IID":
 
+            print("IID ######################################################################################")
+
             subsets_loader = []
 
-            subsets_size = int(len(train_set) / nb_clients)
+            subset_size = int(len(train_set) / nb_clients)
 
             if len(train_set) % nb_clients:
                 extra = len(train_set) % nb_clients
@@ -223,14 +224,14 @@ def data_splitter(
                 indices = list(range(len(train_set) - extra))
                 train_set = Subset(train_set, indices)
 
-            subset_size = [subsets_size for i in range(nb_clients)]
+            subsets_size = [subset_size for i in range(nb_clients)]
 
             generator1 = torch.Generator().manual_seed(42)
 
             for i, subset_loader in enumerate(
                 torch.utils.data.random_split(
                     train_set,
-                    [subsets_size for _ in range(nb_clients)],
+                    [subset_size for _ in range(nb_clients)],
                     generator=generator1,
                 )
             ):
@@ -246,6 +247,8 @@ def data_splitter(
                 )
 
         case "NON-IID":
+
+            print("NON IID ######################################################################################")
 
             _, subsets_size  = distribute_non_iid_data(train_set, nb_clients, 1, TRANSFORM_TRAIN)
 

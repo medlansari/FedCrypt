@@ -6,7 +6,7 @@ distribution: "IID"
 
 fl:
   max_round: 80
-  nb_clients: 10
+  nb_clients: 250
   lr_clients: 1e-3
 
 watermarking:
