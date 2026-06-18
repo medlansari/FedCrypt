@@ -2,10 +2,6 @@
 
 This repository contains the implementation of the paper "FedCrypt: A Dynamic White-Box Watermarking Scheme for Homomorphic Federated Learning".
 
-The paper is under review to the IEEE Transactions on Dependable and Secure Computing journal.
-
-The paper can be found in a preprint version [here](https://www.techrxiv.org/users/796552/articles/1183818-fedcrypt-a-dynamic-white-box-watermarking-scheme-for-homomorphic-federated-learning).
-
 <figure style="text-align: center;">
   <img
   src="images/overview.png"
@@ -142,11 +138,6 @@ following attacks :
 
 ## Other FL Watermarking Methods
 Our code supports seamless integration and benchmarking of various federated learning watermarking methods. In addition to FedCrypt, the framework includes implementations of state-of-the-art approaches such as FedTracker, FedIPR, and Yu et al. method. Each method can be selected via the --method flag and configured using dedicated YAML files in the configs/federated_learning/ directory. This design enables users to directly compare the performance of these methods with FedCrypt.
-
-## Citation
-
-Cite as: Mohammed Lansari, Reda Bellafqira, Katarzyna Kapusta, et al. FedCrypt: A Dynamic White-Box Watermarking Scheme for Homomorphic Federated Learning. TechRxiv. July 16, 2024. 
-DOI: [10.36227/techrxiv.172114666.63343276/v1](https://doi.org/10.36227/techrxiv.172114666.63343276/v1 "DOI")
 
 ## References
 <a id="1">[1]</a> 
